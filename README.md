@@ -13,7 +13,7 @@ base64 image, upload from URL, and upload any type of contents
 Via Composer
 
 ```bash
-$ composer require sudip-palash/mediauploader
+$ composer require sudippalash/mediauploader
 ```
 
 #### For Laravel <= 5.4
@@ -225,9 +225,9 @@ Response from every function looks like this
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
-[ico-version]: https://img.shields.io/packagist/v/sudip-palash/mediauploader?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/sudip-palash/mediauploader?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/sudippalash/mediauploader?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/sudippalash/mediauploader?style=flat-square
 [ico-license]: https://img.shields.io/github/license/sudippalash/mediauploader?style=flat-square
-[link-packagist]: https://packagist.org/packages/sudip-palash/mediauploader
-[link-downloads]: https://packagist.org/packages/sudip-palash/mediauploader
+[link-packagist]: https://packagist.org/packages/sudippalash/mediauploader
+[link-downloads]: https://packagist.org/packages/sudippalash/mediauploader
 [link-author]: https://github.com/sudippalash
