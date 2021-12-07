@@ -1,0 +1,39 @@
+{
+    "name": "sudip/mediauploader",
+    "description": "Laravel 5 package for Media Uploader",
+    "keywords": [
+        "Sudip",
+        "Laravel Media Uploader",
+        "Media Uploader",
+        "Laravel"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Sudip Palash",
+            "email": "palash.sudip@gmail.com"
+        }
+    ],
+    "require": {
+        "intervention/image": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+          "Sudip\\MediaUploder\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Sudip\\MediaUploder\\MediaUploderServiceProvider"
+            ],
+            "aliases": {
+                "Calculator": "Sudip\\MediaUploder\\Facades\\MediaUploder"
+            }
+        }
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
