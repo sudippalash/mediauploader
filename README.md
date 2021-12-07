@@ -13,7 +13,7 @@ base64 image, upload from URL, and upload any type of contents
 Via Composer
 
 ```bash
-$ composer require sudip/mediauploader
+$ composer require sudip-palash/mediauploader
 ```
 
 #### For Laravel <= 5.4
