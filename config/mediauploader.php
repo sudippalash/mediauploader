@@ -26,13 +26,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | image_thumb_height thum
+    | Thumb Image Height Width
     |--------------------------------------------------------------------------
     |
-    | specify the thum image ratio of height and weight
-    |  for example . by defualt it takes 300X300
+    | specify the thumb image ratio of height and weight by defualt it takes 300px X 300px
     */
 
     'image_thumb_height' => 300,
     'image_thumb_width' => 300,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Fake Image Url
+    |--------------------------------------------------------------------------
+    |
+    | fake_image_url 
+    | 
+    */
+
+    'fake_image_url' => '',
 ];

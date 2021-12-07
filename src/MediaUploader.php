@@ -269,4 +269,37 @@ class MediaUploader
         }
         return false;
     }
+
+    public function showFile($path, $name)
+    {
+        $path = $this->storageFolder.$this->basePath.$path;
+        
+        if ($name != null && file_exists($path.'/'.$name)) {
+            return '<a href="'.url('/'.$path.'/'.$name).'" target="_blank">'.$name.'</a>';
+        } else {
+            return '';
+        }
+    }
+
+    // ['thumb' => 1, 'class' => '',  'id' => '', 'style' => '', 'alt' => '', 'fakeImg' => 'images/avatar.png']
+    public function showImg($path, $name, $array = null)
+    {
+        $path = $this->storageFolder.$this->basePath.$path;
+
+        $thumb = (isset($array['thumb'])) ? $this->thumbDir : '';
+        $class = (isset($array['class'])) ? ' class="'.$array['class'].'"' : '';
+        $id = (isset($array['id'])) ? ' id="'.$array['id'].'"' : '';
+        $style = (isset($array['style'])) ? ' style="'.$array['style'].'"' : '';
+        $alt = (isset($array['alt'])) ? ' alt="'.$array['alt'].'"' : '';
+        if ($name != '' && file_exists($path.'/'.$thumb.$name)) {
+            return '<img src="'.url($path.'/'.$thumb.$name).'"'.$alt.$class.$id.$style.'>';
+        } else {
+            if (isset($array['fakeImg'])) {
+                $fakeImg = $array['fakeImg'] == 1 ? config('mediauploader.fake_image_url') : $array['fakeImg'];
+                return '<img src="'.$fakeImg.'"'.$alt.$class.$id.$style.'>';
+            } else {
+                return '';
+            }
+        }
+    }
 }
