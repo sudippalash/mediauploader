@@ -1,6 +1,6 @@
 {
     "name": "sudip-palash/mediauploader",
-    "description": "Laravel 5 package for Media Uploader",
+    "description": "Laravel package for Media Uploader",
     "keywords": [
         "Sudip",
         "Laravel Media Uploader",
