@@ -225,9 +225,9 @@ Response from every function looks like this
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
 
-[ico-version]: https://img.shields.io/packagist/v/sudippalash/mediauploader?style=flat-square
+[ico-version]: https://img.shields.io/packagist/v/sudip-palash/mediauploader?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/sudip-palash/mediauploader?style=flat-square
 [ico-license]: https://img.shields.io/github/license/sudippalash/mediauploader?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/sudippalash/mediauploader?style=flat-square
 [link-packagist]: https://packagist.org/packages/sudip-palash/mediauploader
 [link-downloads]: https://packagist.org/packages/sudip-palash/mediauploader
 [link-author]: https://github.com/sudippalash
