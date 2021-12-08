@@ -270,6 +270,7 @@ class MediaUploader
         return false;
     }
 
+    //File link preview....
     public function showFile($path, $name)
     {
         $path = $this->storageFolder.$this->basePath.$path;
@@ -281,7 +282,7 @@ class MediaUploader
         }
     }
 
-    // ['thumb' => 1, 'class' => '',  'id' => '', 'style' => '', 'alt' => '', 'fakeImg' => 'images/avatar.png']
+    //Image preview....
     public function showImg($path, $name, $array = null)
     {
         $path = $this->storageFolder.$this->basePath.$path;
@@ -295,8 +296,9 @@ class MediaUploader
             return '<img src="'.url($path.'/'.$thumb.$name).'"'.$alt.$class.$id.$style.'>';
         } else {
             if (isset($array['fakeImg'])) {
-                $fakeImg = $array['fakeImg'] == 1 ? config('mediauploader.fake_image_url') : $array['fakeImg'];
-                return '<img src="'.$fakeImg.'"'.$alt.$class.$id.$style.'>';
+                return '<img src="'.$array['fakeImg'].'"'.$alt.$class.$id.$style.'>';
+            } else if (config('mediauploader.fake_image_url') != null) {
+                return '<img src="'.config('mediauploader.fake_image_url').'"'.$alt.$class.$id.$style.'>';
             } else {
                 return '';
             }

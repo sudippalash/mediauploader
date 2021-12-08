@@ -76,6 +76,18 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
 
         'image_thumb_height' => 300,
         'image_thumb_width' => 300,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Fake Image Url
+        |--------------------------------------------------------------------------
+        |
+        | fake_image_url , if you specify a fake image path here. the enitre package will use 
+        | this image when there is not image found. or you can speicify the fake image in the 
+        | function parameter as well
+        */
+
+        'fake_image_url' => null,
     ];
 ```
 
@@ -91,7 +103,7 @@ php artisan storage:link
 FILESYSTEM_DRIVER=public
 ```
 
-## Usage
+## Usage (File Upload)
 1. Image Upload
 
 ```php
@@ -188,7 +200,7 @@ Example:
 ```
 
 
-7. Base64 image Upload
+7. Content Upload
 
 ```php
  MediaUploader::contentUpload(<Content>, <output path>, name=null);
@@ -219,6 +231,50 @@ Response from every function looks like this
         "ext" => "JPG"
         "url" => "http://localhost/1-test/example-pack/public/storage/test/example-image.JPG"
     ]
+```
+
+## Usage (File Delete)
+
+File Delete
+
+```php
+ MediaUploader::delete(<path>, <file_name>, $thumb = false)
+```
+
+Example:
+
+```php
+    $file = MediaUploader::delete('images', $file_name, true);
+
+    if ($file) {
+        // File is deleted successfully
+    }
+```
+
+## Usage (File Preview)
+
+1. File Preview
+
+```php
+ MediaUploader::showFile(<path>, <file_name>)
+```
+
+Example:
+
+```php
+    {!! MediaUploader::showFile('images', $file_name) !!}
+```
+
+2. Image Preview
+
+```php
+ MediaUploader::showImg(<path>, <file_name>, <array options>)
+```
+
+Example:
+
+```php
+    {!! MediaUploader::showImg('images', $file_name, ['thumb' => 1, 'class' => 'img-responsive',  'id' => 'image', 'style' => '', 'alt' => 'Nice Image', 'fakeImg' => 'images/avatar.png']) !!}
 ```
 
 ## License

@@ -40,9 +40,10 @@ return [
     | Fake Image Url
     |--------------------------------------------------------------------------
     |
-    | fake_image_url 
-    | 
+    | fake_image_url , if you specify a fake image path here. the enitre package will use 
+    | this image when there is not image found. or you can speicify the fake image in the 
+    | function parameter as well
     */
 
-    'fake_image_url' => '',
+    'fake_image_url' => null,
 ];
