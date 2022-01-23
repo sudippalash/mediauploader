@@ -136,12 +136,12 @@ class MediaUploader
         $realPath = $this->makeDir($path);
 
         $extension = explode('/', mime_content_type($requestFile))[1];
-        $content = explode(';base64,', $requestFile, 2)[1];
 
         //File Name Generate...
         $fileName = $this->makeFileName(null, $extension, $name);
 
-        $img = Image::make($content);
+        $img = Image::make(base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $requestFile)));
+        $img->stream();
 
         //If real image need to resize...
         if (!empty($imageResize)) {
