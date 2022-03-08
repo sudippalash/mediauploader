@@ -32,10 +32,10 @@ class MediaUploader
     private function makeFileName($originalName, $ext, $name = null)
     {
         if ($name) {
-            $fileName = Str::slug($name, '-').'.'.$ext;
+            $fileName = Str::slug($name, '-').'-'.time().'.'.$ext;
         } elseif ($originalName) {
             $newName = str_replace('.'.$ext, '', $originalName);
-            $fileName = Str::slug($newName, '-').'.'.$ext;
+            $fileName = Str::slug($newName, '-').'-'.time().'.'.$ext;
         } else {
             $fileName = uniqid().'.'.$ext;
         }
