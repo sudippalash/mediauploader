@@ -26,6 +26,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Timestamp Prefix
+    |--------------------------------------------------------------------------
+    |
+    | If timestamp_prefix is true then create a file with a timestamp to ignore the same name image replacement. Example: image-1658562981.png.
+    | If timestamp_prefix is false then the script checks file exists or not if the file exists then add the time() prefix for the new file otherwise leave it as the file
+    | name. 
+    */
+
+    'timestamp_prefix' => false,
+
+    /*
+    |--------------------------------------------------------------------------
     | Thumb Image Height Width
     |--------------------------------------------------------------------------
     |

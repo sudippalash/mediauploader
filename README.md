@@ -67,6 +67,18 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
 
         /*
         |--------------------------------------------------------------------------
+        | Timestamp Prefix
+        |--------------------------------------------------------------------------
+        |
+        | If timestamp_prefix is true then create a file with a timestamp to ignore the same name image replacement. Example: image-1658562981.png.
+        | If timestamp_prefix is false then the script checks file exists or not if the file exists then add the time() prefix for the new file otherwise leave it as the file
+        | name. 
+        */
+
+        'timestamp_prefix' => false,
+
+        /*
+        |--------------------------------------------------------------------------
         | image_thumb_height thum
         |--------------------------------------------------------------------------
         |
@@ -222,14 +234,14 @@ Returns:
 Response from every function looks like this
 ```php
     [
-        "name" => "example-image.JPG"
-        "originalName" => "example-image.JPG"
+        "name" => "example-image.jpg"
+        "originalName" => "example-image.jpg"
         "size" => 148892
         "width" => 600
         "height" => 600
         "mime_type" => "image/jpeg"
-        "ext" => "JPG"
-        "url" => "http://localhost/1-test/example-pack/public/storage/test/example-image.JPG"
+        "ext" => "jpg"
+        "url" => "http://localhost/storage/test/example-image.jpg"
     ]
 ```
 

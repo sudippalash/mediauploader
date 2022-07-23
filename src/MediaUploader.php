@@ -29,18 +29,24 @@ class MediaUploader
     }
 
     //Make File Name...
-    private function makeFileName($originalName, $ext, $name = null)
+    private function makeFileName($originalName, $ext, $name = null, $realPath)
     {
+        $timestamp = config('mediauploader.timestamp_prefix') == true ? '-' . time() : null;
+
         if ($name) {
-            $fileName = Str::slug($name, '-').'.'.$ext;
+            $fileName = Str::slug($name, '-') . $timestamp;
         } elseif ($originalName) {
             $newName = str_replace('.'.$ext, '', $originalName);
-            $fileName = Str::slug($newName, '-').'.'.$ext;
+            $fileName = Str::slug($newName, '-') . $timestamp;
         } else {
-            $fileName = uniqid().'.'.$ext;
+            $fileName = uniqid();
         }
 
-        return $fileName;
+        if (file_exists($this->storageFolder.$realPath.'/'.$fileName)) {
+            $fileName = $fileName . '-' . rand(1, 10);
+        }
+
+        return $fileName . '.' . $ext;
     }
 
     //Only thumb image create in "$definePath/thumb" folder....
@@ -80,7 +86,7 @@ class MediaUploader
         $realPath = $this->makeDir($path);
 
         //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name);
+        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
 
         $img = Image::make($file);
 
@@ -113,7 +119,7 @@ class MediaUploader
         $realPath = $this->makeDir($path);
 
         //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name);
+        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
 
         Storage::putFileAs($realPath, $file, $fileName);
         
@@ -138,7 +144,7 @@ class MediaUploader
         $extension = explode('/', mime_content_type($requestFile))[1];
 
         //File Name Generate...
-        $fileName = $this->makeFileName(null, $extension, $name);
+        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
 
         $img = Image::make(base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $requestFile)));
         $img->stream();
@@ -175,7 +181,7 @@ class MediaUploader
         $content = file_get_contents($requestFile);
 
         //File Name Generate...
-        $fileName = $this->makeFileName(null, $extension, $name);
+        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
 
         $img = Image::make($content);
 
@@ -202,21 +208,23 @@ class MediaUploader
     }
     
     //Upload content to file in "$definePath" folder....
-    public function contentUpload($content, $path, $name)
+    public function contentUpload($content, $path, $name, $extension = 'jpg')
     {
         //Path Create...
         $realPath = $this->makeDir($path);
 
-        Storage::put($realPath.'/'.$name, $content);
+        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
 
-        $data['name'] = $name;
+        Storage::put($realPath.'/'.$fileName, $content);
+
+        $data['name'] = $fileName;
         $data['originalName'] = null;
         $data['size'] = null;
         $data['width'] = null;
         $data['height'] = null;
         $data['mime_type'] = null;
         $data['ext'] = null;
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$name);
+        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
 
         return $data;
     }
@@ -228,7 +236,7 @@ class MediaUploader
         $realPath = $this->makeDir($path);
 
         //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), 'webp', $name);
+        $fileName = $this->makeFileName($file->getClientOriginalName(), 'webp', $name, $realPath);
 
         $img = Image::make($file)->encode('webp', 70);
 
