@@ -14,13 +14,14 @@ class MediaUploader
     {
         $this->storageFolder = 'storage/';
         $this->basePath = config('mediauploader.base_dir');
-        $this->thumbDir = '/'.config('mediauploader.thumb_dir');
+        $this->thumbDir = '/' . config('mediauploader.thumb_dir');
     }
 
     //Create Directory...
     private function makeDir($path)
     {
         $realPath = $this->basePath.$path;
+        
         if (!Storage::exists($realPath)) {
             Storage::makeDirectory($realPath, 0777);
         }
