@@ -290,6 +290,18 @@ class MediaUploader
         return false;
     }
 
+    //File url generate....
+    public function showUrl($path, $name)
+    {
+        $path = $this->storageFolder.$this->basePath.$path;
+        
+        if ($name != null && file_exists($path.'/'.$name)) {
+            return url($path . '/' . $name);
+        } else {
+            return '';
+        }
+    }
+
     //File link preview....
     public function showFile($path, $name)
     {
