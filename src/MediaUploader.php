@@ -42,7 +42,7 @@ class MediaUploader
             $fileName = uniqid();
         }
 
-        if (file_exists($this->storageFolder.$realPath.'/'.$fileName)) {
+        if (file_exists($this->storageFolder.$realPath . '/' . $fileName)) {
             $fileName = $fileName . '-' . rand(1, 10);
         }
 
@@ -58,10 +58,10 @@ class MediaUploader
         
 
         //Path Create...
-        $thumbPath = $thumbPath == true ? $path.'/'.$thumbPath : $path.$this->thumbDir;
+        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path.$this->thumbDir;
         $thumbPath = $this->makeDir($thumbPath);
 
-        $img = Image::make($this->storageFolder.$realPath.'/'.$file);
+        $img = Image::make($this->storageFolder.$realPath . '/' . $file);
 
         $img->resize($thumbWidth, $thumbHeight, function ($constraint) {
             $constraint->aspectRatio();
@@ -70,7 +70,7 @@ class MediaUploader
 
         $background = Image::canvas($thumbWidth, $thumbHeight);
         $background->insert($img, 'center');
-        $background->save($this->storageFolder.$thumbPath.'/'.$file);
+        $background->save($this->storageFolder.$thumbPath . '/' . $file);
 
         if (isset($img->filename)) {
             return true;
@@ -94,7 +94,7 @@ class MediaUploader
         if (!empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(public_path($this->storageFolder.$realPath.'/'.$fileName));
+        $img->save(public_path($this->storageFolder.$realPath . '/' . $fileName));
 
         if ($thumb) {
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
@@ -107,7 +107,7 @@ class MediaUploader
         $data['height'] = $img->height();
         $data['mime_type'] = $img->mime();
         $data['ext'] = $file->getClientOriginalExtension();
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
         
         return $data;
     }
@@ -130,7 +130,7 @@ class MediaUploader
         $data['height'] = null;
         $data['mime_type'] = $file->getMimeType();
         $data['ext'] = $file->getClientOriginalExtension();
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
 
         return $data;
     }
@@ -153,7 +153,7 @@ class MediaUploader
         if (!empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(public_path($this->storageFolder.$realPath.'/'.$fileName));
+        $img->save(public_path($this->storageFolder.$realPath . '/' . $fileName));
 
         if ($thumb) {
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
@@ -166,7 +166,7 @@ class MediaUploader
         $data['height'] = $img->height();
         $data['mime_type'] = $img->mime();
         $data['ext'] = $extension;
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
         
         return $data;
     }
@@ -189,7 +189,7 @@ class MediaUploader
         if (!empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(public_path($this->storageFolder.$realPath.'/'.$fileName));
+        $img->save(public_path($this->storageFolder.$realPath . '/' . $fileName));
 
         if ($thumb) {
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
@@ -202,7 +202,7 @@ class MediaUploader
         $data['height'] = $img->height();
         $data['mime_type'] = $img->mime();
         $data['ext'] = $extension;
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
         
         return $data;
     }
@@ -215,7 +215,7 @@ class MediaUploader
 
         $fileName = $this->makeFileName(null, $extension, $name, $realPath);
 
-        Storage::put($realPath.'/'.$fileName, $content);
+        Storage::put($realPath . '/' . $fileName, $content);
 
         $data['name'] = $fileName;
         $data['originalName'] = null;
@@ -224,7 +224,7 @@ class MediaUploader
         $data['height'] = null;
         $data['mime_type'] = null;
         $data['ext'] = null;
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
 
         return $data;
     }
@@ -244,7 +244,7 @@ class MediaUploader
         if (!empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(public_path($this->storageFolder.$realPath.'/'.$fileName));
+        $img->save(public_path($this->storageFolder.$realPath . '/' . $fileName));
 
         if ($thumb) {
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
@@ -257,7 +257,7 @@ class MediaUploader
         $data['height'] = $img->height();
         $data['mime_type'] = $img->mime();
         $data['ext'] = '.webp';
-        $data['url'] = url($this->storageFolder.$realPath.'/'.$fileName);
+        $data['url'] = url($this->storageFolder.$realPath . '/' . $fileName);
         
         return $data;
     }
@@ -267,11 +267,11 @@ class MediaUploader
     {
         $realPath = $this->basePath.$path;
 
-        if (Storage::exists($realPath.'/'.$file)) {
-            Storage::delete($realPath.'/'.$file);
+        if (Storage::exists($realPath . '/' . $file)) {
+            Storage::delete($realPath . '/' . $file);
 
             if ($thumb) {
-                Storage::delete($realPath.'/thumb/'.$file);
+                Storage::delete($realPath . '/thumb/' . $file);
             }
             return true;
         }
@@ -295,7 +295,7 @@ class MediaUploader
     {
         $path = $this->storageFolder.$this->basePath.$path;
         
-        if ($name != null && file_exists($path.'/'.$name)) {
+        if ($name != null && file_exists($path . '/' . $name)) {
             return url($path . '/' . $name);
         } else {
             return '';
@@ -307,8 +307,8 @@ class MediaUploader
     {
         $path = $this->storageFolder.$this->basePath.$path;
         
-        if ($name != null && file_exists($path.'/'.$name)) {
-            return '<a href="'.url('/'.$path.'/'.$name).'" target="_blank">'.$name.'</a>';
+        if ($name != null && file_exists($path . '/' . $name)) {
+            return '<a href="' . url($path. '/'. $name) . '" target="_blank">'.$name.'</a>';
         } else {
             return '';
         }
@@ -324,13 +324,13 @@ class MediaUploader
         $id = (isset($array['id'])) ? ' id="'.$array['id'].'"' : '';
         $style = (isset($array['style'])) ? ' style="'.$array['style'].'"' : '';
         $alt = (isset($array['alt'])) ? ' alt="'.$array['alt'].'"' : '';
-        if ($name != '' && file_exists($path.'/'.$thumb.$name)) {
-            return '<img src="'.url($path.'/'.$thumb.$name).'"'.$alt.$class.$id.$style.'>';
+        if ($name != '' && file_exists($path . '/' . $thumb.$name)) {
+            return '<img src="'.url($path . '/' . $thumb.$name) .'"'. $alt . $class . $id . $style .'>';
         } else {
             if (isset($array['fakeImg'])) {
-                return '<img src="'.$array['fakeImg'].'"'.$alt.$class.$id.$style.'>';
+                return '<img src="'. $array['fakeImg'] .'"'. $alt . $class . $id . $style .'>';
             } else if (config('mediauploader.fake_image_url') != null) {
-                return '<img src="'.config('mediauploader.fake_image_url').'"'.$alt.$class.$id.$style.'>';
+                return '<img src="'. config('mediauploader.fake_image_url') .'"'. $alt . $class . $id . $style .'>';
             } else {
                 return '';
             }
