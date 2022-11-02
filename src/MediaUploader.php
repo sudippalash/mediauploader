@@ -278,6 +278,18 @@ class MediaUploader
         return false;
     }
 
+    //Delete directory "$definePath" folder....
+    public function removeDirectory($path)
+    {
+        $realPath = $this->basePath.$path;
+
+        if (Storage::exists($realPath)) {
+            Storage::deleteDirectory($realPath);
+            return true;
+        }
+        return false;
+    }
+
     //File link preview....
     public function showFile($path, $name)
     {

@@ -263,6 +263,24 @@ Example:
     }
 ```
 
+## Usage (Directory Delete)
+
+Directory Delete
+
+```php
+ MediaUploader::removeDirectory(<path>)
+```
+
+Example:
+
+```php
+    $path = MediaUploader::removeDirectory('images');
+
+    if ($path) {
+        // Directory is deleted successfully
+    }
+```
+
 ## Usage (File Preview)
 
 1. File Preview
