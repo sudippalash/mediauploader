@@ -29,7 +29,7 @@
                 "Sudip\\MediaUploder\\MediaUploderServiceProvider"
             ],
             "aliases": {
-                "Calculator": "Sudip\\MediaUploder\\Facades\\MediaUploder"
+                "MediaUploder": "Sudip\\MediaUploder\\Facades\\MediaUploder"
             }
         }
     },
