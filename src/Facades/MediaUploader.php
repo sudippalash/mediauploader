@@ -1,13 +1,13 @@
 <?php
 
-namespace Sudip\MediaUploder\Facades;
+namespace Sudip\MediaUploader\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
  * Class MediaUploader.
  *
- * @see \Sudip\MediaUploder\MediaUploader
+ * @see \Sudip\MediaUploader\MediaUploader
  */
 class MediaUploader extends Facade
 {

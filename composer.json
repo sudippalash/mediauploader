@@ -20,16 +20,16 @@
     },
     "autoload": {
         "psr-4": {
-          "Sudip\\MediaUploder\\": "src"
+          "Sudip\\MediaUploader\\": "src"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Sudip\\MediaUploder\\MediaUploderServiceProvider"
+                "Sudip\\MediaUploader\\MediaUploaderServiceProvider"
             ],
             "aliases": {
-                "MediaUploder": "Sudip\\MediaUploder\\Facades\\MediaUploder"
+                "MediaUploader": "Sudip\\MediaUploader\\Facades\\MediaUploader"
             }
         }
     },

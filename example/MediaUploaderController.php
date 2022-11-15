@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use Sudip\MediaUploder\Facades\MediaUploader;
+use Sudip\MediaUploader\Facades\MediaUploader;
 
 class MediaUploaderController extends Controller
 {

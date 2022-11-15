@@ -1,11 +1,11 @@
 <?php
 
 
-namespace Sudip\MediaUploder;
+namespace Sudip\MediaUploader;
 
 use Illuminate\Support\ServiceProvider;
 
-class MediaUploderServiceProvider extends ServiceProvider
+class MediaUploaderServiceProvider extends ServiceProvider
 {
     /**
      * Register services.

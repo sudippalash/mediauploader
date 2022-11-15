@@ -1,6 +1,6 @@
 <?php
 
-namespace Sudip\MediaUploder;
+namespace Sudip\MediaUploader;
 
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage;
