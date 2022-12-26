@@ -281,9 +281,21 @@ Example:
     }
 ```
 
-## Usage (FIle/Image URL, File Preview & Image Preview)
+## Usage (FIle/Image Exists, FIle/Image URL, File Preview & Image Preview)
 
-1. FIle/Image Url
+1. FIle/Image Exists
+
+```php
+ MediaUploader::fileExists(<path>, <file_name>)
+```
+
+Example:
+
+```php
+    {!! MediaUploader::fileExists('images', $file_name) !!}
+```
+
+2. FIle/Image Url
 
 ```php
  MediaUploader::showUrl(<path>, <file_name>)
@@ -295,7 +307,7 @@ Example:
     {!! MediaUploader::showUrl('images', $file_name) !!}
 ```
 
-2. File Preview
+3. File Preview
 
 ```php
  MediaUploader::showFile(<path>, <file_name>)
@@ -307,7 +319,7 @@ Example:
     {!! MediaUploader::showFile('images', $file_name) !!}
 ```
 
-3. Image Preview
+4. Image Preview
 
 ```php
  MediaUploader::showImg(<path>, <file_name>, <array options>)

@@ -291,6 +291,18 @@ class MediaUploader
         return false;
     }
 
+    //File exists check....
+    public function fileExists($path, $name)
+    {
+        $path = $this->storageFolder.$this->basePath.$path;
+        
+        if ($name != null && file_exists($path . '/' . $name)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     //File url generate....
     public function showUrl($path, $name)
     {
