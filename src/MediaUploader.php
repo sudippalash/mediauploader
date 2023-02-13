@@ -311,7 +311,7 @@ class MediaUploader
         if ($name != null && file_exists($path . '/' . $name)) {
             return url($path . '/' . $name);
         } else {
-            return '';
+            return null;
         }
     }
 
@@ -323,7 +323,7 @@ class MediaUploader
         if ($name != null && file_exists($path . '/' . $name)) {
             return '<a href="' . url($path. '/'. $name) . '" target="_blank">'.$name.'</a>';
         } else {
-            return '';
+            return null;
         }
     }
 
@@ -345,7 +345,7 @@ class MediaUploader
             } else if (config('mediauploader.fake_image_url') != null) {
                 return '<img src="'. config('mediauploader.fake_image_url') .'"'. $alt . $class . $id . $style .'>';
             } else {
-                return '';
+                return null;
             }
         }
     }
