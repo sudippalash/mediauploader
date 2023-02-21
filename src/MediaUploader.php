@@ -14,7 +14,7 @@ class MediaUploader
     {
         $this->storageFolder = 'storage/';
         $this->basePath = config('mediauploader.base_dir');
-        $this->thumbDir = '/' . config('mediauploader.thumb_dir');
+        $this->thumbDir = config('mediauploader.thumb_dir');
     }
 
     //Create Directory...
@@ -59,7 +59,7 @@ class MediaUploader
         
 
         //Path Create...
-        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path.$this->thumbDir;
+        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path . '/' . $this->thumbDir;
         $thumbPath = $this->makeDir($thumbPath);
 
         $img = Image::make($this->storageFolder.$realPath . '/' . $file);
@@ -332,7 +332,7 @@ class MediaUploader
     {
         $path = $this->storageFolder.$this->basePath.$path;
 
-        $thumb = (isset($array['thumb'])) ? $this->thumbDir : '';
+        $thumb = (isset($array['thumb'])) ? $this->thumbDir . '/' : '';
         $class = (isset($array['class'])) ? ' class="'.$array['class'].'"' : '';
         $id = (isset($array['id'])) ? ' id="'.$array['id'].'"' : '';
         $style = (isset($array['style'])) ? ' style="'.$array['style'].'"' : '';
