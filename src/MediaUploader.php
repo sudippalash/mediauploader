@@ -53,25 +53,29 @@ class MediaUploader
     //Only thumb image create in "$definePath/thumb" folder....
     public function thumb($path, $file, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0)
     {
-        $realPath = $this->basePath.$path;
+        $realPath = $this->basePath . $path;
         $thumbWidth = $thumbWidth > 0 ? $thumbWidth : config('mediauploader.image_thumb_width');
         $thumbHeight = $thumbHeight > 0 ? $thumbHeight : config('mediauploader.image_thumb_height');
-        
+
 
         //Path Create...
-        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path . '/' . $this->thumbDir;
+        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path . $this->thumbDir;
         $thumbPath = $this->makeDir($thumbPath);
 
-        $img = Image::make($this->storageFolder.$realPath . '/' . $file);
+        $img = Image::make($this->storageFolder . $realPath . '/' . $file);
 
         $img->resize($thumbWidth, $thumbHeight, function ($constraint) {
             $constraint->aspectRatio();
             $constraint->upsize();
         });
 
-        $background = Image::canvas($thumbWidth, $thumbHeight);
-        $background->insert($img, 'center');
-        $background->save($this->storageFolder.$thumbPath . '/' . $file);
+        if ($thumbWidth && $thumbHeight) {
+            $background = Image::canvas($thumbWidth, $thumbHeight);
+            $background->insert($img, 'center');
+            $background->save($this->storageFolder . $thumbPath . '/' . $file);
+        } else {
+            $img->save($this->storageFolder . $thumbPath . '/' . $file);
+        }
 
         if (isset($img->filename)) {
             return true;
