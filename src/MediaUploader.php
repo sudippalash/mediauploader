@@ -59,7 +59,7 @@ class MediaUploader
 
 
         //Path Create...
-        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path . $this->thumbDir;
+        $thumbPath = $thumbPath == true ? $path . '/' . $thumbPath : $path . '/' . $this->thumbDir;
         $thumbPath = $this->makeDir($thumbPath);
 
         $img = Image::make($this->storageFolder . $realPath . '/' . $file);
