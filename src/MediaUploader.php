@@ -8,8 +8,32 @@ use Intervention\Image\Facades\Image;
 
 class MediaUploader
 {
-    public $storageFolder, $basePath, $thumbDir;
+    /**
+     * The storage folder name.
+     *
+     * @var string
+     */
+    public $storageFolder;
 
+    /**
+     * The base folder name.
+     *
+     * @var string
+     */
+    public $basePath;
+    
+    /**
+     * The thumb folder name.
+     *
+     * @var string
+     */
+    public $thumbDir;
+
+    /**
+     * Create a new media uploader instance.
+     *
+     * @return void
+     */
     function __construct()
     {
         $this->storageFolder = 'storage/';
@@ -17,7 +41,12 @@ class MediaUploader
         $this->thumbDir = config('mediauploader.thumb_dir');
     }
 
-    //Create Directory...
+    /**
+     * Create Directory
+     *
+     * @param  string  $path
+     * @return string
+     */
     private function makeDir($path)
     {
         $realPath = $this->basePath.$path;
@@ -29,7 +58,15 @@ class MediaUploader
         return $realPath;
     }
 
-    //Make File Name...
+    /**
+     * Make File Name
+     *
+     * @param  string  $originalName
+     * @param  string  $ext
+     * @param  string|null  $name
+     * @param  string  $realPath
+     * @return string
+     */
     private function makeFileName($originalName, $ext, $name = null, $realPath)
     {
         $timestamp = config('mediauploader.timestamp_prefix') == true ? '-' . time() : null;
@@ -50,7 +87,16 @@ class MediaUploader
         return $fileName . '.' . $ext;
     }
 
-    //Only thumb image create in "$definePath/thumb" folder....
+    /**
+     * Only thumb image create in "$definePath/thumb" folder
+     *
+     * @param  string  $path
+     * @param  string  $file
+     * @param  boolean  $thumbPath
+     * @param  integer  $thumbWidth
+     * @param  integer  $thumbHeight
+     * @return boolean
+     */
     public function thumb($path, $file, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0)
     {
         $realPath = $this->basePath . $path;
@@ -84,7 +130,17 @@ class MediaUploader
         }
     }
 
-    //Upload image ("$definePath" and "$definePath/thumb") folder....
+    /**
+     * Upload image ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $path
+     * @param  boolean  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
     public function imageUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
     {
         //Path Create...
@@ -117,7 +173,14 @@ class MediaUploader
         return $data;
     }
 
-    //Upload any file type in "$definePath" folder....
+    /**
+     * Upload any file type in "$definePath" folder
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $path
+     * @param  string|null  $name
+     * @return array
+     */
     public function anyUpload($file, $path, $name = null)
     {
         //Path Create...
@@ -140,7 +203,17 @@ class MediaUploader
         return $data;
     }
 
-    // Upload base64 Image ("$definePath" and "$definePath/thumb") folder....
+    /**
+     * Upload base64 Image ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  string  $requestFile
+     * @param  string  $path
+     * @param  boolean  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
     public function base64ImageUpload($requestFile, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
     {
         //Path Create...
@@ -176,7 +249,17 @@ class MediaUploader
         return $data;
     }
 
-    // Upload Image from url ("$definePath" and "$definePath/thumb") folder....
+    /**
+     * Upload Image from url ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  string  $requestFile
+     * @param  string  $path
+     * @param  boolean  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
     public function imageUploadFromUrl($requestFile, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
     {
         //Path Create...
@@ -211,8 +294,16 @@ class MediaUploader
         
         return $data;
     }
-    
-    //Upload content to file in "$definePath" folder....
+
+    /**
+     * Upload content to file in "$definePath" folder
+     *
+     * @param  string  $content
+     * @param  string  $path
+     * @param  string|null  $name
+     * @param  string  $extension
+     * @return array
+     */
     public function contentUpload($content, $path, $name, $extension = 'jpg')
     {
         //Path Create...
@@ -233,8 +324,18 @@ class MediaUploader
 
         return $data;
     }
-    
-    //Upload & Converted Image to webp ("$definePath" and "$definePath/thumb") folder....
+
+    /**
+     * Upload & Converted Image to webp ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  string  $file
+     * @param  string  $path
+     * @param  boolean  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
     public function webpUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
     {
         //Path Create...
@@ -267,7 +368,14 @@ class MediaUploader
         return $data;
     }
 
-    //Delete file "$definePath" folder....
+    /**
+     * Delete file "$definePath" folder
+     *
+     * @param  string  $path
+     * @param  string  $file
+     * @param  boolean  $thumb
+     * @return boolean
+     */
     public function delete($path, $file, $thumb = false)
     {
         $realPath = $this->basePath.$path;
@@ -283,7 +391,12 @@ class MediaUploader
         return false;
     }
 
-    //Delete directory "$definePath" folder....
+    /**
+     * Delete directory "$definePath" folder
+     *
+     * @param  string  $path
+     * @return boolean
+     */
     public function removeDirectory($path)
     {
         $realPath = $this->basePath.$path;
@@ -295,7 +408,13 @@ class MediaUploader
         return false;
     }
 
-    //File exists check....
+    /**
+     * File exists checker
+     *
+     * @param  string  $path
+     * @param  string  $name
+     * @return boolean
+     */
     public function fileExists($path, $name)
     {
         $path = $this->storageFolder.$this->basePath.$path;
@@ -307,7 +426,13 @@ class MediaUploader
         }
     }
 
-    //File url generate....
+    /**
+     * File url generator
+     *
+     * @param  string  $path
+     * @param  string  $name
+     * @return string|null
+     */
     public function showUrl($path, $name)
     {
         $path = $this->storageFolder.$this->basePath.$path;
@@ -319,34 +444,48 @@ class MediaUploader
         }
     }
 
-    //File link preview....
+    /**
+     * File link preview
+     *
+     * @param  string  $path
+     * @param  string  $name
+     * @return string|null
+     */
     public function showFile($path, $name)
     {
         $path = $this->storageFolder.$this->basePath.$path;
         
-        if ($name != null && file_exists($path . '/' . $name)) {
-            return '<a href="' . url($path. '/'. $name) . '" target="_blank">'.$name.'</a>';
+        if ($name && file_exists($path . '/' . $name)) {
+            return '<a href="' . url($path . '/' . $name) . '" target="_blank">' . $name . '</a>';
         } else {
             return null;
         }
     }
 
-    //Image preview....
+    /**
+     * Image preview
+     *
+     * @param  string  $path
+     * @param  string  $name
+     * @param  array|null  $array
+     * @return string|null
+     */
     public function showImg($path, $name, $array = null)
     {
         $path = $this->storageFolder.$this->basePath.$path;
 
-        $thumb = (isset($array['thumb'])) ? $this->thumbDir . '/' : '';
-        $class = (isset($array['class'])) ? ' class="'.$array['class'].'"' : '';
-        $id = (isset($array['id'])) ? ' id="'.$array['id'].'"' : '';
-        $style = (isset($array['style'])) ? ' style="'.$array['style'].'"' : '';
-        $alt = (isset($array['alt'])) ? ' alt="'.$array['alt'].'"' : '';
-        if ($name != '' && file_exists($path . '/' . $thumb.$name)) {
+        $thumb = isset($array['thumb']) ? $this->thumbDir . '/' : '';
+        $class = isset($array['class']) ? ' class="' . $array['class'] . '"' : '';
+        $id = isset($array['id']) ? ' id="' . $array['id'] . '"' : '';
+        $style = isset($array['style']) ? ' style="' . $array['style'] . '"' : '';
+        $alt = isset($array['alt']) ? ' alt="' . $array['alt'] . '"' : '';
+
+        if ($name && file_exists($path . '/' . $thumb.$name)) {
             return '<img src="'.url($path . '/' . $thumb.$name) .'"'. $alt . $class . $id . $style .'>';
         } else {
             if (isset($array['fakeImg'])) {
                 return '<img src="'. $array['fakeImg'] .'"'. $alt . $class . $id . $style .'>';
-            } else if (config('mediauploader.fake_image_url') != null) {
+            } else if (config('mediauploader.fake_image_url')) {
                 return '<img src="'. config('mediauploader.fake_image_url') .'"'. $alt . $class . $id . $style .'>';
             } else {
                 return null;
