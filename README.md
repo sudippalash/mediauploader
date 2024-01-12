@@ -100,6 +100,17 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
         */
 
         'fake_image_url' => null,
+
+        /*
+        |--------------------------------------------------------------------------
+        | Folder permission
+        |--------------------------------------------------------------------------
+        |
+        | path_permission , if you create a folder in your project then you can define your folder permission.
+        | Example: null, 0755, 0777
+        */
+
+        'path_permission' => 0777,
     ];
 ```
 

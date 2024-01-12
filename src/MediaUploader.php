@@ -28,6 +28,13 @@ class MediaUploader
      * @var string
      */
     public $thumbDir;
+    
+    /**
+     * The folder permission.
+     *
+     * @var string
+     */
+    public $pathPermission;
 
     /**
      * Create a new media uploader instance.
@@ -39,6 +46,7 @@ class MediaUploader
         $this->storageFolder = 'storage/';
         $this->basePath = config('mediauploader.base_dir');
         $this->thumbDir = config('mediauploader.thumb_dir');
+        $this->pathPermission = config('mediauploader.path_permission');
     }
 
     /**
@@ -52,7 +60,7 @@ class MediaUploader
         $realPath = $this->basePath.$path;
         
         if (!Storage::exists($realPath)) {
-            Storage::makeDirectory($realPath, 0777);
+            Storage::makeDirectory($realPath, $this->pathPermission);
         }
 
         return $realPath;
@@ -402,7 +410,11 @@ class MediaUploader
         $realPath = $this->basePath.$path;
 
         if (Storage::exists($realPath)) {
-            Storage::deleteDirectory($realPath);
+            try {
+                Storage::deleteDirectory($realPath);
+            } catch (\Exception $e) {
+                return false;
+            }
             return true;
         }
         return false;
