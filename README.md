@@ -35,7 +35,7 @@ You can use the facade for shorter code. Add this to your aliases:
 You will need to publish config file to add `mediauploader` global path.
 
 ```
-php artisan vendor:publish --provider="Sudip\MediaUploader\MediaUploaderServiceProvider" --tag=mediauploader
+php artisan vendor:publish --provider="Sudip\MediaUploader\MediaUploaderServiceProvider" --tag=config
 ```
 
 In `config/mediauploader.php` config file you should set `mediauploader` global path.
@@ -59,7 +59,7 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
         | Thumb Directory
         |--------------------------------------------------------------------------
         |
-        | thumd_dir creates another folder inside the directory as a "thumb" by default 
+        | thumb_dir creates another folder inside the directory as a "thumb" by default 
         | you can change the name thumb to any other name you like. 
         */
 
@@ -79,11 +79,11 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
 
         /*
         |--------------------------------------------------------------------------
-        | image_thumb_height thum
+        | image_thumb_height thumb
         |--------------------------------------------------------------------------
         |
-        | specify the thum image ratio of height and weight
-        |  for example . by defualt it takes 300X300
+        | specify the thumb image ratio of height and weight
+        |  for example . by default it takes 300X300
         */
 
         'image_thumb_height' => 300,
@@ -94,8 +94,8 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
         | Fake Image Url
         |--------------------------------------------------------------------------
         |
-        | fake_image_url , if you specify a fake image path here. the enitre package will use 
-        | this image when there is not image found. or you can speicify the fake image in the 
+        | fake_image_url , if you specify a fake image path here. the entire package will use 
+        | this image when there is not image found. or you can specify the fake image in the 
         | function parameter as well
         */
 
@@ -123,7 +123,7 @@ php artisan storage:link
 ```
 2. Change your env filesystem drive to this
 ```
-FILESYSTEM_DRIVER=public
+FILESYSTEM_DISK=public
 ```
 
 ## Usage (File Upload)
@@ -339,16 +339,13 @@ Example:
 Example:
 
 ```php
-    {!! MediaUploader::showImg('images', $file_name, ['thumb' => 1, 'class' => 'img-responsive',  'id' => 'image', 'style' => '', 'alt' => 'Nice Image', 'fakeImg' => 'images/avatar.png']) !!}
+    {!! MediaUploader::showImg('images', $file_name, [
+        'thumb' => true, // If thumb image store via upload function.
+        'popup' => true, // Currently support only jQuery fancybox.
+        'fakeImg' => 'images/avatar.png', // Pass fake image path without url or pass true (if pass true it will generate fake image from config file fake_image_url value).
+        'id' => 'image',
+        'class' => 'img-fluid',
+        'style' => '',
+        'alt' => 'Nice Image',
+    ]) !!}
 ```
-
-## License
-
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-[ico-version]: https://img.shields.io/packagist/v/sudippalash/mediauploader?style=flat-square
-[ico-downloads]: https://img.shields.io/packagist/dt/sudippalash/mediauploader?style=flat-square
-[ico-license]: https://img.shields.io/github/license/sudippalash/mediauploader?style=flat-square
-[link-packagist]: https://packagist.org/packages/sudippalash/mediauploader
-[link-downloads]: https://packagist.org/packages/sudippalash/mediauploader
-[link-author]: https://github.com/sudippalash

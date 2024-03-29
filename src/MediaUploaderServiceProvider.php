@@ -30,6 +30,6 @@ class MediaUploaderServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__ . '/../config/mediauploader.php' => config_path('mediauploader.php'),
-        ], 'mediauploader');
+        ], 'config');
     }
 }
