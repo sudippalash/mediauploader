@@ -497,9 +497,11 @@ class MediaUploader
         $popup = isset($array['popup']) ? $array['popup'] : false;
 
         $imgSrc = null;
+        $fakeImgView = false;
         if ($name && file_exists($path.'/'.$thumb.$name)) {
             $imgSrc = url($path.'/'.$thumb.$name);
         } else {
+            $fakeImgView = true;
             if (isset($array['fakeImg'])) {
                 if (is_string($array['fakeImg'])) {
                     $imgSrc = $array['fakeImg'];
@@ -511,10 +513,9 @@ class MediaUploader
 
         if ($imgSrc) {
             $img = '<img src="'.$imgSrc.'"'.$alt.$class.$id.$style.'>';
-            if ($popup === true) {
+            if ($popup === true && $fakeImgView === false) {
                 return '<a href="'.url($path.'/'.$name).'" data-fancybox="group" data-fancybox data-caption="'.$alt.'" data-lyte-options="group:vacation">'.$img.'</a>';
             }
-
             return $img;
         } else {
             return null;
