@@ -54,7 +54,7 @@ class MediaUploader
      *
      * @return void
      */
-    public function disk($diskName)
+    public function disk(string $diskName)
     {
         $this->diskName = $diskName;
 
@@ -64,10 +64,9 @@ class MediaUploader
     /**
      * Create Directory
      *
-     * @param  string  $path
      * @return string
      */
-    private function makeDir($path)
+    public function makeDir(string $path)
     {
         $realPath = $this->basePath.$path;
 
@@ -79,45 +78,9 @@ class MediaUploader
     }
 
     /**
-     * Make File Name
-     *
-     * @param  string  $originalName
-     * @param  string  $ext
-     * @param  string|null  $name
-     * @param  string  $realPath
-     * @return string
-     */
-    private function makeFileName($originalName, $ext, $name, $realPath)
-    {
-        $timestamp = config('mediauploader.timestamp_prefix') == true ? '-'.time() : null;
-
-        if ($name) {
-            $fileName = Str::slug($name, '-').$timestamp;
-        } elseif ($originalName) {
-            $newName = str_replace('.'.$ext, '', $originalName);
-            $fileName = Str::slug($newName, '-').$timestamp;
-        } else {
-            $fileName = uniqid();
-        }
-
-        if ($this->exists($realPath.'/'.$fileName)) {
-            $fileName = $fileName.'-'.rand(1, 10);
-        }
-
-        return $fileName.'.'.$ext;
-    }
-
-    /**
      * Only thumb image create in "$definePath/thumb" folder
-     *
-     * @param  string  $path
-     * @param  string  $file
-     * @param  bool  $thumbPath
-     * @param  int  $thumbWidth
-     * @param  int  $thumbHeight
-     * @return bool
      */
-    public function thumb($path, $file, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0)
+    public function thumb(string $path, string $file, bool $thumbPath = false, int $thumbWidth = 0, int $thumbHeight = 0): bool
     {
         $realPath = $this->basePath.$path;
         $thumbWidth = $thumbWidth > 0 ? $thumbWidth : config('mediauploader.image_thumb_width');
@@ -531,6 +494,35 @@ class MediaUploader
         } else {
             return null;
         }
+    }
+
+    /**
+     * Make File Name
+     *
+     * @param  string  $originalName
+     * @param  string  $ext
+     * @param  string|null  $name
+     * @param  string  $realPath
+     * @return string
+     */
+    private function makeFileName($originalName, $ext, $name, $realPath)
+    {
+        $timestamp = config('mediauploader.timestamp_prefix') == true ? '-'.time() : null;
+
+        if ($name) {
+            $fileName = Str::slug($name, '-').$timestamp;
+        } elseif ($originalName) {
+            $newName = str_replace('.'.$ext, '', $originalName);
+            $fileName = Str::slug($newName, '-').$timestamp;
+        } else {
+            $fileName = uniqid();
+        }
+
+        if ($this->exists($realPath.'/'.$fileName)) {
+            $fileName = $fileName.'-'.rand(1, 10);
+        }
+
+        return $fileName.'.'.$ext;
     }
 
     /**
