@@ -28,7 +28,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Sudip\\MediaUploader\\MediaUploaderServiceProvider"
+                "Sudip\\MediaUploader\\Providers\\AppServiceProvider",
+                "Sudip\\MediaUploader\\Providers\\RouteServiceProvider"
             ],
             "aliases": {
                 "MediaUploader": "Sudip\\MediaUploader\\Facades\\MediaUploader"
