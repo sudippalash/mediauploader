@@ -21,7 +21,7 @@ $ composer require sudippalash/mediauploader
 After updating composer, add the ServiceProvider to the providers array in config/app.php
 
 ```php
-Sudip\MediaUploader\MediaUploaderServiceProvider::class,
+Sudip\MediaUploader\Providers\AppServiceProvider::class,
 ```
 
 You can use the facade for shorter code. Add this to your aliases:
@@ -35,7 +35,7 @@ You can use the facade for shorter code. Add this to your aliases:
 You will need to publish config file to add `mediauploader` global path.
 
 ```
-php artisan vendor:publish --provider="Sudip\MediaUploader\MediaUploaderServiceProvider" --tag=config
+php artisan vendor:publish --provider="Sudip\MediaUploader\Providers\AppServiceProvider" --tag=config
 ```
 
 In `config/mediauploader.php` config file you should set `mediauploader` global path.
@@ -52,7 +52,7 @@ In `config/mediauploader.php` config file you should set `mediauploader` global 
         |
         */
 
-        'base_dir' => '',
+        'base_dir' => null,
 
         /*
         |--------------------------------------------------------------------------

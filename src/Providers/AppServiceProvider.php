@@ -1,11 +1,11 @@
 <?php
 
-
-namespace Sudip\MediaUploader;
+namespace Sudip\MediaUploader\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Sudip\MediaUploader\MediaUploader;
 
-class MediaUploaderServiceProvider extends ServiceProvider
+class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register services.
@@ -14,10 +14,10 @@ class MediaUploaderServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/mediauploader.php', 'mediauploader');
+        $this->mergeConfigFrom(__DIR__.'/../../config/mediauploader.php', 'mediauploader');
 
         $this->app->bind('mediauploader', function () {
-            return new MediaUploader();
+            return new MediaUploader;
         });
     }
 
@@ -29,7 +29,7 @@ class MediaUploaderServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__ . '/../config/mediauploader.php' => config_path('mediauploader.php'),
+            __DIR__.'/../config/mediauploader.php' => config_path('mediauploader.php'),
         ], 'config');
     }
 }
