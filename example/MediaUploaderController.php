@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Sudip\MediaUploader\Facades\MediaUploader;
 
 class MediaUploaderController extends Controller
@@ -15,7 +14,6 @@ class MediaUploaderController extends Controller
 
     public function imageUpload(Request $request)
     {
-        
         $image = MediaUploader::imageUpload($request->file, 'test', 1, null, [600, 600]);
         dd($image);
     }
