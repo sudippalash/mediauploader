@@ -487,7 +487,7 @@ class MediaUploader
         if ($imgSrc) {
             $img = '<img src="'.$imgSrc.'"'.$alt.$class.$id.$style.'>';
             if ($popup === true && $fakeImgView === false) {
-                return '<a href="'.$this->getUrl($path.'/'.$name).'" data-caption="'.$alt.' data-fancybox="group" data-fancybox" data-lyte-options="group:vacation">'.$img.'</a>';
+                return '<a href="'.$this->getUrl($path.'/'.$name).'" data-caption="'.$alt.'" data-fancybox="group" data-lyte-options="group:vacation">'.$img.'</a>';
             }
 
             return $img;
