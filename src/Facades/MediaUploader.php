@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Facade;
  * @method public \Sudip\MediaUploader\MediaUploader showUrl(string $path, string $name)
  * @method public \Sudip\MediaUploader\MediaUploader showFile(string $path, string $name)
  * @method public \Sudip\MediaUploader\MediaUploader showImg(string $path, string $name, array|null $array)
+ *
  * @see \Sudip\MediaUploader\MediaUploader
  */
 class MediaUploader extends Facade
