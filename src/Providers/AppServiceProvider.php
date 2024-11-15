@@ -29,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/../config/mediauploader.php' => config_path('mediauploader.php'),
+            __DIR__.'/../../config/mediauploader.php' => config_path('mediauploader.php'),
         ], 'config');
     }
 }
