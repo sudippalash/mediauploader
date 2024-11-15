@@ -2,8 +2,8 @@
 
 namespace Sudip\MediaUploader\Providers;
 
-use Sudip\MediaUploader\MediaUploader;
 use Illuminate\Support\ServiceProvider;
+use Sudip\MediaUploader\MediaUploader;
 
 class AppServiceProvider extends ServiceProvider
 {
