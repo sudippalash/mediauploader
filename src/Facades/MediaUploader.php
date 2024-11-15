@@ -5,8 +5,6 @@ namespace Sudip\MediaUploader\Facades;
 use Illuminate\Support\Facades\Facade;
 
 /**
- * Class MediaUploader.
- *
  * @method public \Sudip\MediaUploader\MediaUploader disk(string $disk)
  * @method public \Sudip\MediaUploader\MediaUploader makeDir(string $path)
  * @method public \Sudip\MediaUploader\MediaUploader thumb(string $path, string $file, boolean $thumbPath, integer $thumbWidth, integer $thumbHeight)
@@ -22,8 +20,6 @@ use Illuminate\Support\Facades\Facade;
  * @method public \Sudip\MediaUploader\MediaUploader showUrl(string $path, string $name)
  * @method public \Sudip\MediaUploader\MediaUploader showFile(string $path, string $name)
  * @method public \Sudip\MediaUploader\MediaUploader showImg(string $path, string $name, array|null $array)
- * @method private \Sudip\MediaUploader\MediaUploader makeFileName(string $originalName, string $ext, string|null $name, string $realPath)
- *
  * @see \Sudip\MediaUploader\MediaUploader
  */
 class MediaUploader extends Facade
