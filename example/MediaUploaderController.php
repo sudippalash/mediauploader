@@ -12,6 +12,12 @@ class MediaUploaderController extends Controller
         return view('mediauploader');
     }
 
+    public function anyUpload(Request $request)
+    {
+        $image = MediaUploader::anyUpload($request->file, 'test');
+        dd($image);
+    }
+
     public function imageUpload(Request $request)
     {
         $image = MediaUploader::imageUpload($request->file, 'test', 1, null, [600, 600]);
@@ -21,18 +27,6 @@ class MediaUploaderController extends Controller
     public function webpUpload(Request $request)
     {
         $image = MediaUploader::webpUpload($request->file, 'test', 1, null, [600, 600]);
-        dd($image);
-    }
-
-    public function anyUpload(Request $request)
-    {
-        $image = MediaUploader::anyUpload($request->file, 'test');
-        dd($image);
-    }
-
-    public function thumbUpload(Request $request)
-    {
-        $image = MediaUploader::thumb('test', $request->file);
         dd($image);
     }
 
@@ -51,6 +45,12 @@ class MediaUploaderController extends Controller
     public function contentUpload(Request $request)
     {
         $image = MediaUploader::contentUpload($request->file, 'test', 'asdf.png');
+        dd($image);
+    }
+
+    public function thumbUpload(Request $request)
+    {
+        $image = MediaUploader::thumb('test', $request->file);
         dd($image);
     }
 }

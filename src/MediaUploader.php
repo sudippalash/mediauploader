@@ -64,94 +64,18 @@ class MediaUploader
     /**
      * Create Directory
      *
+     * @param  string  $path
      * @return string
      */
-    public function makeDir(string $path)
+    public function makeDir($path)
     {
         $realPath = $this->basePath.$path;
 
-        if (! $this->exists($realPath)) {
+        if ($this->diskName != 's3' && ! $this->exists($realPath)) {
             Storage::disk($this->diskName)->makeDirectory($realPath, $this->pathPermission);
         }
 
         return $realPath;
-    }
-
-    /**
-     * Only thumb image create in "$definePath/thumb" folder
-     */
-    public function thumb(string $path, string $file, bool $thumbPath = false, int $thumbWidth = 0, int $thumbHeight = 0): bool
-    {
-        $realPath = $this->basePath.$path;
-        $thumbWidth = $thumbWidth > 0 ? $thumbWidth : config('mediauploader.image_thumb_width');
-        $thumbHeight = $thumbHeight > 0 ? $thumbHeight : config('mediauploader.image_thumb_height');
-
-        //Path Create...
-        $thumbPath = $thumbPath == true ? $path.'/'.$thumbPath : $path.'/'.$this->thumbDir;
-        $thumbPath = $this->makeDir($thumbPath);
-
-        $img = Image::make(Storage::disk($this->diskName)->path($realPath.'/'.$file));
-        $img->resize($thumbWidth, $thumbHeight, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-
-        if ($thumbWidth && $thumbHeight) {
-            $background = Image::canvas($thumbWidth, $thumbHeight);
-            $background->insert($img, 'center');
-            $background->save(Storage::disk($this->diskName)->path($thumbPath.'/'.$file));
-        } else {
-            $img->save(Storage::disk($this->diskName)->path($thumbPath.'/'.$file));
-        }
-
-        if (isset($img->filename)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Upload image ("$definePath" and "$definePath/thumb") folder
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
-     */
-    public function imageUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
-
-        $img = Image::make($file);
-
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
-        }
-        $img->save(Storage::disk($this->diskName)->path($realPath.'/'.$fileName));
-
-        if ($thumb) {
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = $file->getClientOriginalName();
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = $file->getClientOriginalExtension();
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
     }
 
     /**
@@ -185,6 +109,104 @@ class MediaUploader
     }
 
     /**
+     * Upload image ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $path
+     * @param  bool  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
+    public function imageUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
+    {
+        //Path Create...
+        $realPath = $this->makeDir($path);
+
+        //File Name Generate...
+        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
+
+        $img = Image::make($file);
+
+        //If real image need to resize...
+        if (! empty($imageResize)) {
+            $img->resize($imageResize[0], $imageResize[1]);
+        }
+
+        // Have to encode again after resizing the image
+        $img->encode($file->getClientOriginalExtension());
+
+        // Save the image
+        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
+
+        if ($thumb) {
+            // Save the thumb image
+            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
+        }
+
+        $data['name'] = $fileName;
+        $data['originalName'] = $file->getClientOriginalName();
+        $data['size'] = $img->filesize();
+        $data['width'] = $img->width();
+        $data['height'] = $img->height();
+        $data['mime_type'] = $img->mime();
+        $data['ext'] = $file->getClientOriginalExtension();
+        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
+
+        return $data;
+    }
+
+    /**
+     * Upload & Converted Image to webp ("$definePath" and "$definePath/thumb") folder
+     *
+     * @param  \Illuminate\Http\UploadedFile  $file
+     * @param  string  $path
+     * @param  bool  $thumb
+     * @param  string|null  $name
+     * @param  array  $imageResize
+     * @param  array  $thumbResize
+     * @return array
+     */
+    public function webpUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
+    {
+        //Path Create...
+        $realPath = $this->makeDir($path);
+
+        //File Name Generate...
+        $fileName = $this->makeFileName($file->getClientOriginalName(), 'webp', $name, $realPath);
+
+        $img = Image::make($file)->encode('webp', 70);
+
+        //If real image need to resize...
+        if (! empty($imageResize)) {
+            $img->resize($imageResize[0], $imageResize[1]);
+        }
+
+        // Have to encode again after resizing the image
+        $img->encode('webp');
+
+        // Save the image
+        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
+
+        if ($thumb) {
+            // Save the thumb image
+            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
+        }
+
+        $data['name'] = $fileName;
+        $data['originalName'] = $file->getClientOriginalName();
+        $data['size'] = $img->filesize();
+        $data['width'] = $img->width();
+        $data['height'] = $img->height();
+        $data['mime_type'] = $img->mime();
+        $data['ext'] = '.webp';
+        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
+
+        return $data;
+    }
+
+    /**
      * Upload base64 Image ("$definePath" and "$definePath/thumb") folder
      *
      * @param  string  $requestFile
@@ -212,9 +234,15 @@ class MediaUploader
         if (! empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(Storage::disk($this->diskName)->path($realPath.'/'.$fileName));
+
+        // Have to encode again after resizing the image
+        $img->encode($extension);
+
+        // Save the image
+        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
 
         if ($thumb) {
+            // Save the thumb image
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
         }
 
@@ -258,9 +286,15 @@ class MediaUploader
         if (! empty($imageResize)) {
             $img->resize($imageResize[0], $imageResize[1]);
         }
-        $img->save(Storage::disk($this->diskName)->path($realPath.'/'.$fileName));
+
+        // Have to encode again after resizing the image
+        $img->encode($extension);
+
+        // Save the image
+        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
 
         if ($thumb) {
+            // Save the thumb image
             $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
         }
 
@@ -307,46 +341,46 @@ class MediaUploader
     }
 
     /**
-     * Upload & Converted Image to webp ("$definePath" and "$definePath/thumb") folder
+     * Only thumb image create in "$definePath/thumb" folder
      *
-     * @param  string  $file
      * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
+     * @param  string  $file
+     * @param  bool  $thumbPath
+     * @param  int  $thumbWidth
+     * @param  int  $thumbHeight
+     * @return bool
      */
-    public function webpUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
+    public function thumb($path, $file, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0)
     {
+        $realPath = $this->basePath.$path;
+        $thumbWidth = $thumbWidth > 0 ? $thumbWidth : config('mediauploader.image_thumb_width');
+        $thumbHeight = $thumbHeight > 0 ? $thumbHeight : config('mediauploader.image_thumb_height');
+
         //Path Create...
-        $realPath = $this->makeDir($path);
+        $thumbPath = $thumbPath == true ? $path.'/'.$thumbPath : $path.'/'.$this->thumbDir;
+        $thumbPath = $this->makeDir($thumbPath);
 
-        //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), 'webp', $name, $realPath);
+        $img = Image::make(Storage::disk($this->diskName)->get($realPath.'/'.$file));
+        $img->resize($thumbWidth, $thumbHeight, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
 
-        $img = Image::make($file)->encode('webp', 70);
+        if ($thumbWidth && $thumbHeight) {
+            $background = Image::canvas($thumbWidth, $thumbHeight);
+            $background->insert($img, 'center');
+            $background->encode(pathinfo($file, PATHINFO_EXTENSION));
+            Storage::disk($this->diskName)->put($thumbPath.'/'.$file, $background->__toString());
 
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
+            return true;
+        } else {
+            $img->encode(pathinfo($file, PATHINFO_EXTENSION));
+            Storage::disk($this->diskName)->put($thumbPath.'/'.$file, $img->__toString());
+
+            return true;
         }
-        $img->save(Storage::disk($this->diskName)->path($realPath.'/'.$fileName));
 
-        if ($thumb) {
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = $file->getClientOriginalName();
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = '.webp';
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
+        return false;
     }
 
     /**
