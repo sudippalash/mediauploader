@@ -3,8 +3,9 @@
 [![Latest Version on Packagist][ico-version]][link-packagist]
 [![Total Downloads][ico-downloads]][link-downloads]
 
+`mediauploader` is a simple file-handling package for `Laravel` that provides various options for managing files, including image uploads, file uploads, WebP uploads, base64 image uploads, image uploads from URLs, and Google image content uploads. The package currently supports `public`, `local`, and `s3` storage (note: only publicly accessible `S3` buckets are supported).
 
-`mediauploader` is a simple file-handling package for `Laravel` that offers a variety of options for managing files, such as image upload, file upload, WebP upload, base64 image upload, upload from URL, and google image content. It also supports file and image previews.
+It also includes file and image preview functionality.
 
 ## Install
 
@@ -12,20 +13,6 @@ Via Composer
 
 ```bash
 composer require sudippalash/mediauploader
-```
-
-#### For Laravel <= 5.4
-
-After updating composer, add the ServiceProvider to the providers array in config/app.php
-
-```php
-Sudip\MediaUploader\Providers\AppServiceProvider::class,
-```
-
-You can use the facade for shorter code. Add this to your aliases:
-
-```php
-'MediaUploader' => Sudip\MediaUploader\Facades\MediaUploader::class,
 ```
 
 #### Publish config file
