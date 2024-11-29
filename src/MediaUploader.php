@@ -471,31 +471,47 @@ class MediaUploader
      *
      * @param  string  $path
      * @param  string  $name
+     * @param  string|null  $emptyText
      * @return string|null
      */
-    public function showFile($path, $name)
+    public function showFile($path, $name, $emptyText = null)
     {
         $path = $this->basePath.$path;
 
         if ($name && $this->exists($path.'/'.$name)) {
             return '<a href="'.$this->getUrl($path.'/'.$name).'" target="_blank">'.$name.'</a>';
         } else {
-            return null;
+            return $emptyText ?? null;
+        }
+    }
+
+    /**
+     * File link preview from url
+     *
+     * @param  string  $url
+     * @param  string|null  $name
+     * @param  string|null  $emptyText
+     * @return string|null
+     */
+    public function showFileFromUrl($url, $name = null, $emptyText = null)
+    {
+        if ($url) {
+            return '<a href="'.$url.'" target="_blank">'.($name ?? $url).'</a>';
+        } else {
+            return $emptyText ?? null;
         }
     }
 
     /**
      * Image preview
      *
-     * @param  string  $path
+     * @param  string|url  $path
      * @param  string  $name
      * @param  array|null  $array
      * @return string|null
      */
-    public function showImg($path, $name, $array = null)
+    public function showImg($pathOrUrl, $name, $array = null)
     {
-        $path = $this->basePath.$path;
-
         $thumb = isset($array['thumb']) ? $this->thumbDir.'/' : '';
         $class = isset($array['class']) ? ' class="'.$array['class'].'"' : '';
         $id = isset($array['id']) ? ' id="'.$array['id'].'"' : '';
@@ -503,17 +519,30 @@ class MediaUploader
         $alt = isset($array['alt']) ? ' alt="'.$array['alt'].'"' : '';
         $popup = isset($array['popup']) ? $array['popup'] : false;
 
+        $imgUrl = null;
         $imgSrc = null;
         $fakeImgView = false;
-        if ($name && $this->exists($path.'/'.$thumb.$name)) {
-            $imgSrc = $this->getUrl($path.'/'.$thumb.$name);
+        if (filter_var($pathOrUrl, FILTER_VALIDATE_URL)) {
+            $imgUrl = $imgSrc = $pathOrUrl;
+        } elseif ($name && $this->exists($this->basePath.$pathOrUrl.'/'.$name)) {
+            $path = $this->basePath.$pathOrUrl;
+            $imgUrl = $this->getUrl($path.'/'.$name);
+            if ($name && $this->exists($path.'/'.$thumb.$name)) {
+                $imgSrc = $this->getUrl($path.'/'.$thumb.$name);
+            } else {
+                $imgSrc = $imgUrl;
+            }
         } else {
             $fakeImgView = true;
             if (isset($array['fakeImg'])) {
                 if (is_string($array['fakeImg'])) {
                     $imgSrc = $array['fakeImg'];
-                } elseif (config('mediauploader.fake_image_url')) {
-                    $imgSrc = config('mediauploader.fake_image_url');
+                } elseif ($configFakeUrl = config('mediauploader.fake_image_url')) {
+                    if (filter_var($configFakeUrl, FILTER_VALIDATE_URL)) {
+                        $imgSrc = config('mediauploader.fake_image_url');
+                    } else {
+                        $imgSrc = url(config('mediauploader.fake_image_url'));
+                    }
                 }
             }
         }
@@ -521,7 +550,7 @@ class MediaUploader
         if ($imgSrc) {
             $img = '<img src="'.$imgSrc.'"'.$alt.$class.$id.$style.'>';
             if ($popup === true && $fakeImgView === false) {
-                return '<a href="'.$this->getUrl($path.'/'.$name).'" data-caption="'.$alt.'" data-fancybox="group" data-lyte-options="group:vacation">'.$img.'</a>';
+                return '<a href="'.$imgUrl.'" data-caption="'.$alt.'" data-fancybox="group" data-lyte-options="group:vacation">'.$img.'</a>';
             }
 
             return $img;

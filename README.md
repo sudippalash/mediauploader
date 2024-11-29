@@ -78,10 +78,10 @@ return [
     | Fake Image Url
     |--------------------------------------------------------------------------
     |
-    | fake_image_url , if you specify a fake image path here. the entire package will use
+    | fake_image_url , if you specify a fake image path or url here. the entire package will use
     | this image when there is no image found. or you can specify the fake image in the
     | function parameter as well.
-    | Example: 'fake_image_url' => url('images/fake.png'),
+    | Example: 'fake_image_url' => 'images/fake.png' or 'fake_image_url' => 'https://example.com/images/fake.png,
     */
 
     'fake_image_url' => null,
@@ -315,16 +315,29 @@ Example:
 2. File Preview
 
 ```php
-MediaUploader::showFile(<path>, <file_name>)
+MediaUploader::showFile(<path>, <file_name>, <file_not_found_text|optional>)
 ```
 
 Example:
 
 ```php
-{!! MediaUploader::showFile('images', $file_name) !!}
+{!! MediaUploader::showFile('images', $file_name, $empty_text) !!}
 ```
 
-3. Image Preview
+
+3. File Preview from url
+
+```php
+MediaUploader::showFile(<url>, <file_name|optional>, <file_not_found_text|optional>)
+```
+
+Example:
+
+```php
+{!! MediaUploader::showFile($file_url, $file_name, $empty_text) !!}
+```
+
+4. Image Preview
 
 ```php
 MediaUploader::showImg(<path>, <file_name>, <array options>)

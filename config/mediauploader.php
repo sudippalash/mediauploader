@@ -52,10 +52,10 @@ return [
     | Fake Image Url
     |--------------------------------------------------------------------------
     |
-    | fake_image_url , if you specify a fake image path here. the entire package will use
+    | fake_image_url , if you specify a fake image path or url here. the entire package will use
     | this image when there is no image found. or you can specify the fake image in the
     | function parameter as well.
-    | Example: 'fake_image_url' => url('images/fake.png'),
+    | Example: 'fake_image_url' => 'images/fake.png' or 'fake_image_url' => 'https://example.com/images/fake.png,
     */
 
     'fake_image_url' => null,
