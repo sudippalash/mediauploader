@@ -328,25 +328,25 @@ Example:
 3. File Preview from url
 
 ```php
-MediaUploader::showFile(<url>, <file_name|optional>, <file_not_found_text|optional>)
+MediaUploader::showFileFromUrl(<url>, <file_name|optional>, <file_not_found_text|optional>)
 ```
 
 Example:
 
 ```php
-{!! MediaUploader::showFile($file_url, $file_name, $empty_text) !!}
+{!! MediaUploader::showFileFromUrl($file_url, $file_name, $empty_text) !!}
 ```
 
 4. Image Preview
 
 ```php
-MediaUploader::showImg(<path>, <file_name>, <array options>)
+MediaUploader::showImg(<path_or_url>, <file_name>, <array options>)
 ```
 
 Example:
 
 ```php
-{!! MediaUploader::showImg('images', $file_name, [
+{!! MediaUploader::showImg($pathOrUrl, $file_name, [
     'thumb' => true, // If thumb image store via upload function.
     'popup' => true, // Currently support only jQuery fancybox.
     'fakeImg' => 'images/avatar.png', // Pass fake image path without url or pass true (if pass true it will generate fake image from config file fake_image_url value).
