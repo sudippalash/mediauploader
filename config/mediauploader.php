@@ -1,73 +1,51 @@
 <?php
 
 return [
-    /*
-    |--------------------------------------------------------------------------
-    | Base Directory
-    |--------------------------------------------------------------------------
-    |
-    | base_dir stores all other directory inside storage folder of your laravel application by default
-    | if you specify any name. all storage will be done inside that directory or name that you specified
-    |
-    */
+    // Disk to store files on. null uses filesystems.default.
+    'disk' => env('MEDIAUPLOADER_DISK'),
 
+    // All files are stored inside this folder. Example: 'uploads'
     'base_dir' => null,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Thumb Directory
-    |--------------------------------------------------------------------------
-    |
-    | thumb_dir creates another folder inside the directory as a "thumb" by default
-    | you can change the name thumb to any other name you like.
-    */
-
+    // Thumbs are stored in this sub folder.
     'thumb_dir' => 'thumb',
 
-    /*
-    |--------------------------------------------------------------------------
-    | Timestamp Prefix
-    |--------------------------------------------------------------------------
-    |
-    | If timestamp_prefix is true then create a file with a timestamp to ignore the same name image replacement. Example: image-1658562981.png.
-    | If timestamp_prefix is false then the script checks file exists or not if the file exists then add the time() prefix for the new file otherwise leave it as the file
-    | name.
-    */
-
+    // Add a timestamp to every file name. Example: image-1658562981.png
     'timestamp_prefix' => false,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Thumb Image Height Width
-    |--------------------------------------------------------------------------
-    |
-    | specify the thumb image ratio of height and weight by default it takes 300px X 300px
-    */
+    // Use a random name instead of the original file name.
+    'random_name' => false,
 
-    'image_thumb_height' => 300,
+    // Image driver: gd or imagick
+    'image_driver' => env('MEDIAUPLOADER_IMAGE_DRIVER', 'gd'),
+
+    // Image quality (1-100)
+    'image_quality' => 90,
+    'webp_quality' => 70,
+
+    // Default thumb size in px. Set one to null to keep the aspect ratio.
     'image_thumb_width' => 300,
+    'image_thumb_height' => 300,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Fake Image Url
-    |--------------------------------------------------------------------------
-    |
-    | fake_image_url , if you specify a fake image path or url here. the entire package will use
-    | this image when there is no image found. or you can specify the fake image in the
-    | function parameter as well.
-    | Example: 'fake_image_url' => 'images/fake.png' or 'fake_image_url' => 'https://example.com/images/fake.png,
-    */
-
+    // Image shown by showImg() when 'fakeImg' => true and the image is missing.
+    // Example: 'images/fake.png' or 'https://example.com/images/fake.png'
     'fake_image_url' => null,
 
-    /*
-    |--------------------------------------------------------------------------
-    | Folder permission
-    |--------------------------------------------------------------------------
-    |
-    | path_permission , if you create a folder in your project then you can define your folder permission.
-    | Example: null, 0755, 0777
-    */
+    // Return temporary urls (in minutes) on disks that support them, like private S3.
+    'temporary_url_minutes' => null,
 
-    'path_permission' => 0777,
+    // imageUploadFromUrl() settings
+    'remote' => [
+        'timeout' => 15,
+        'max_size' => 10 * 1024 * 1024, // bytes
+        'allow_private_hosts' => false,
+    ],
+
+    // Route that serves files from the private local disk: /mediauploader/{path}
+    'route' => [
+        'enabled' => true,
+        'prefix' => 'mediauploader',
+        'disk' => 'local',
+        'middleware' => [], // Example: ['web', 'auth']
+    ],
 ];

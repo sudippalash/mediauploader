@@ -2,613 +2,558 @@
 
 namespace Sudip\MediaUploader;
 
+use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Intervention\Image\Facades\Image;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\FileExtension;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\ImageInterface;
+use InvalidArgumentException;
 
 class MediaUploader
 {
-    /**
-     * The storage folder name.
-     *
-     * @var string
-     */
-    public $diskName;
+    protected string $diskName;
 
-    /**
-     * The base folder name.
-     *
-     * @var string
-     */
-    public $basePath;
+    protected string $basePath;
 
-    /**
-     * The thumb folder name.
-     *
-     * @var string
-     */
-    public $thumbDir;
+    protected string $thumbDir;
 
-    /**
-     * The folder permission.
-     *
-     * @var string
-     */
-    public $pathPermission;
-
-    /**
-     * Create a new media uploader instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
-        $this->diskName = config('filesystems.default');
-        $this->basePath = config('mediauploader.base_dir');
-        $this->thumbDir = config('mediauploader.thumb_dir');
-        $this->pathPermission = config('mediauploader.path_permission');
+        $this->diskName = config('mediauploader.disk') ?: config('filesystems.default');
+        $this->basePath = trim((string) config('mediauploader.base_dir'), '/');
+        $this->thumbDir = trim((string) config('mediauploader.thumb_dir', 'thumb'), '/');
     }
 
     /**
-     * Set disk
-     *
-     * @return void
+     * Use another disk. Returns a copy so the facade keeps its default disk.
      */
-    public function disk(string $diskName)
+    public function disk(string $diskName): static
     {
-        $this->diskName = $diskName;
+        $uploader = clone $this;
+        $uploader->diskName = $diskName;
 
-        return $this;
+        return $uploader;
     }
 
-    /**
-     * Create Directory
-     *
-     * @param  string  $path
-     * @return string
-     */
-    public function makeDir($path)
+    public function makeDir(string $path): string
     {
-        $realPath = $this->basePath.$path;
+        $realPath = $this->path($path);
 
-        if ($this->diskName != 's3' && ! $this->exists($realPath)) {
-            Storage::disk($this->diskName)->makeDirectory($realPath, $this->pathPermission);
+        if (! $this->exists($realPath)) {
+            $this->storage()->makeDirectory($realPath);
         }
 
         return $realPath;
     }
 
     /**
-     * Upload any file type in "$definePath" folder
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $path
-     * @param  string|null  $name
-     * @return array
+     * Upload any file type.
      */
-    public function anyUpload($file, $path, $name = null)
+    public function anyUpload(UploadedFile $file, string $path, ?string $name = null): array|false
     {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
-
-        Storage::disk($this->diskName)->putFileAs($realPath, $file, $fileName);
-
-        $data['name'] = $fileName;
-        $data['originalName'] = $file->getClientOriginalName();
-        $data['size'] = $file->getSize();
-        $data['width'] = null;
-        $data['height'] = null;
-        $data['mime_type'] = $file->getMimeType();
-        $data['ext'] = $file->getClientOriginalExtension();
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Upload image ("$definePath" and "$definePath/thumb") folder
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
-     */
-    public function imageUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), $file->getClientOriginalExtension(), $name, $realPath);
-
-        $img = Image::make($file);
-
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
-        }
-
-        // Have to encode again after resizing the image
-        $img->encode($file->getClientOriginalExtension());
-
-        // Save the image
-        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
-
-        if ($thumb) {
-            // Save the thumb image
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = $file->getClientOriginalName();
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = $file->getClientOriginalExtension();
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Upload & Converted Image to webp ("$definePath" and "$definePath/thumb") folder
-     *
-     * @param  \Illuminate\Http\UploadedFile  $file
-     * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
-     */
-    public function webpUpload($file, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        //File Name Generate...
-        $fileName = $this->makeFileName($file->getClientOriginalName(), 'webp', $name, $realPath);
-
-        $img = Image::make($file)->encode('webp', 70);
-
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
-        }
-
-        // Have to encode again after resizing the image
-        $img->encode('webp');
-
-        // Save the image
-        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
-
-        if ($thumb) {
-            // Save the thumb image
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = $file->getClientOriginalName();
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = '.webp';
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Upload base64 Image ("$definePath" and "$definePath/thumb") folder
-     *
-     * @param  string  $requestFile
-     * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
-     */
-    public function base64ImageUpload($requestFile, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        $extension = explode('/', mime_content_type($requestFile))[1];
-
-        //File Name Generate...
-        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
-
-        $img = Image::make(base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $requestFile)));
-        $img->stream();
-
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
-        }
-
-        // Have to encode again after resizing the image
-        $img->encode($extension);
-
-        // Save the image
-        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
-
-        if ($thumb) {
-            // Save the thumb image
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = null;
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = $extension;
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Upload Image from url ("$definePath" and "$definePath/thumb") folder
-     *
-     * @param  string  $requestFile
-     * @param  string  $path
-     * @param  bool  $thumb
-     * @param  string|null  $name
-     * @param  array  $imageResize
-     * @param  array  $thumbResize
-     * @return array
-     */
-    public function imageUploadFromUrl($requestFile, $path, $thumb = false, $name = null, $imageResize = [], $thumbResize = [0, 0])
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        $extension = pathinfo($requestFile, PATHINFO_EXTENSION);
-        $content = file_get_contents($requestFile);
-
-        //File Name Generate...
-        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
-
-        $img = Image::make($content);
-
-        //If real image need to resize...
-        if (! empty($imageResize)) {
-            $img->resize($imageResize[0], $imageResize[1]);
-        }
-
-        // Have to encode again after resizing the image
-        $img->encode($extension);
-
-        // Save the image
-        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $img->__toString());
-
-        if ($thumb) {
-            // Save the thumb image
-            $this->thumb($path, $fileName, false, $thumbResize[0], $thumbResize[1]);
-        }
-
-        $data['name'] = $fileName;
-        $data['originalName'] = null;
-        $data['size'] = $img->filesize();
-        $data['width'] = $img->width();
-        $data['height'] = $img->height();
-        $data['mime_type'] = $img->mime();
-        $data['ext'] = $extension;
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Upload content to file in "$definePath" folder
-     *
-     * @param  string  $content
-     * @param  string  $path
-     * @param  string|null  $name
-     * @param  string  $extension
-     * @return array
-     */
-    public function contentUpload($content, $path, $name, $extension = 'jpg')
-    {
-        //Path Create...
-        $realPath = $this->makeDir($path);
-
-        $fileName = $this->makeFileName(null, $extension, $name, $realPath);
-
-        Storage::disk($this->diskName)->put($realPath.'/'.$fileName, $content);
-
-        $data['name'] = $fileName;
-        $data['originalName'] = null;
-        $data['size'] = null;
-        $data['width'] = null;
-        $data['height'] = null;
-        $data['mime_type'] = null;
-        $data['ext'] = null;
-        $data['url'] = $this->getUrl($realPath.'/'.$fileName);
-
-        return $data;
-    }
-
-    /**
-     * Only thumb image create in "$definePath/thumb" folder
-     *
-     * @param  string  $path
-     * @param  string  $file
-     * @param  bool  $thumbPath
-     * @param  int  $thumbWidth
-     * @param  int  $thumbHeight
-     * @return bool
-     */
-    public function thumb($path, $file, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0)
-    {
-        $realPath = $this->basePath.$path;
-        $thumbWidth = $thumbWidth > 0 ? $thumbWidth : config('mediauploader.image_thumb_width');
-        $thumbHeight = $thumbHeight > 0 ? $thumbHeight : config('mediauploader.image_thumb_height');
-
-        //Path Create...
-        $thumbPath = $thumbPath == true ? $path.'/'.$thumbPath : $path.'/'.$this->thumbDir;
-        $thumbPath = $this->makeDir($thumbPath);
-
-        $img = Image::make(Storage::disk($this->diskName)->get($realPath.'/'.$file));
-        $img->resize($thumbWidth, $thumbHeight, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
-        });
-
-        if ($thumbWidth && $thumbHeight) {
-            $background = Image::canvas($thumbWidth, $thumbHeight);
-            $background->insert($img, 'center');
-            $background->encode(pathinfo($file, PATHINFO_EXTENSION));
-            Storage::disk($this->diskName)->put($thumbPath.'/'.$file, $background->__toString());
-
-            return true;
-        } else {
-            $img->encode(pathinfo($file, PATHINFO_EXTENSION));
-            Storage::disk($this->diskName)->put($thumbPath.'/'.$file, $img->__toString());
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Delete file "$definePath" folder
-     *
-     * @param  string  $path
-     * @param  string  $file
-     * @param  bool  $thumb
-     * @return bool
-     */
-    public function delete($path, $file, $thumb = false)
-    {
-        $realPath = $this->basePath.$path;
-
-        if ($this->exists($realPath.'/'.$file)) {
-            Storage::disk($this->diskName)->delete($realPath.'/'.$file);
-
-            if ($thumb) {
-                Storage::disk($this->diskName)->delete($realPath.'/'.$this->thumbDir.'/'.$file);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Delete directory "$definePath" folder
-     *
-     * @param  string  $path
-     * @return bool
-     */
-    public function removeDirectory($path)
-    {
-        $realPath = $this->basePath.$path;
-
-        if ($this->exists($realPath)) {
-            try {
-                Storage::disk($this->diskName)->deleteDirectory($realPath);
-            } catch (\Exception $e) {
-                return false;
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * File exists checker
-     *
-     * @param  string  $path
-     * @param  string  $name
-     * @return bool
-     */
-    public function fileExists($path, $name)
-    {
-        $path = $this->basePath.$path;
-        if ($name != null && $this->exists($path.'/'.$name)) {
-            return true;
-        } else {
+        $realPath = $this->path($path);
+        $ext = strtolower($file->getClientOriginalExtension()) ?: (string) $file->guessExtension();
+        $fileName = $this->makeFileName($file->getClientOriginalName(), $ext, $name, $realPath);
+
+        if (! $this->storage()->putFileAs($realPath, $file, $fileName)) {
             return false;
         }
+
+        return [
+            'name' => $fileName,
+            'originalName' => $file->getClientOriginalName(),
+            'size' => $file->getSize(),
+            'width' => null,
+            'height' => null,
+            'mime_type' => $file->getMimeType(),
+            'ext' => $ext,
+            'url' => $this->getUrl($realPath.'/'.$fileName),
+        ];
     }
 
     /**
-     * File url generator
-     *
-     * @param  string  $path
-     * @param  string  $name
-     * @return string|null
+     * Upload an image, optionally resized and with a thumb.
      */
-    public function showUrl($path, $name)
+    public function imageUpload(UploadedFile $file, string $path, bool $thumb = false, ?string $name = null, array $imageResize = [], array $thumbResize = [0, 0]): array|false
     {
-        $path = $this->basePath.$path;
+        $ext = $this->imageExtension($file->getClientOriginalExtension(), $file->getMimeType());
+        $image = $this->images()->read($file->getRealPath());
 
-        if ($name != null && $this->exists($path.'/'.$name)) {
-            return $this->getUrl($path.'/'.$name);
+        return $this->saveImage($image, $path, $ext, $file->getClientOriginalName(), $name, $thumb, $imageResize, $thumbResize);
+    }
+
+    /**
+     * Upload an image converted to webp.
+     */
+    public function webpUpload(UploadedFile $file, string $path, bool $thumb = false, ?string $name = null, array $imageResize = [], array $thumbResize = [0, 0]): array|false
+    {
+        $image = $this->images()->read($file->getRealPath());
+
+        return $this->saveImage($image, $path, 'webp', $file->getClientOriginalName(), $name, $thumb, $imageResize, $thumbResize);
+    }
+
+    /**
+     * Upload a base64 image. Accepts a data uri or a plain base64 string.
+     */
+    public function base64ImageUpload(string $requestFile, string $path, bool $thumb = false, ?string $name = null, array $imageResize = [], array $thumbResize = [0, 0]): array|false
+    {
+        $base64 = preg_replace('#^data:[^;]+;base64,#i', '', trim($requestFile));
+        $content = base64_decode($base64, true);
+
+        if (! $content) {
+            throw new InvalidArgumentException('Invalid base64 image.');
+        }
+
+        $ext = $this->imageExtension(null, $this->mimeType($content));
+        $image = $this->images()->read($content);
+
+        return $this->saveImage($image, $path, $ext, null, $name, $thumb, $imageResize, $thumbResize);
+    }
+
+    /**
+     * Download an image from a http(s) url and upload it.
+     */
+    public function imageUploadFromUrl(string $requestFile, string $path, bool $thumb = false, ?string $name = null, array $imageResize = [], array $thumbResize = [0, 0]): array|false
+    {
+        $content = $this->download($requestFile);
+
+        if ($content === null) {
+            return false;
+        }
+
+        $urlExt = pathinfo((string) parse_url($requestFile, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $ext = $this->imageExtension($urlExt, $this->mimeType($content));
+        $image = $this->images()->read($content);
+
+        return $this->saveImage($image, $path, $ext, null, $name, $thumb, $imageResize, $thumbResize);
+    }
+
+    /**
+     * Save raw content to a file.
+     */
+    public function contentUpload(string $content, string $path, ?string $name = null, string $extension = 'jpg'): array|false
+    {
+        $realPath = $this->path($path);
+        $ext = strtolower(ltrim($extension, '.'));
+        $fileName = $this->makeFileName(null, $ext, $name, $realPath);
+
+        if (! $this->storage()->put($realPath.'/'.$fileName, $content)) {
+            return false;
+        }
+
+        return [
+            'name' => $fileName,
+            'originalName' => null,
+            'size' => strlen($content),
+            'width' => null,
+            'height' => null,
+            'mime_type' => $this->mimeType($content),
+            'ext' => $ext,
+            'url' => $this->getUrl($realPath.'/'.$fileName),
+        ];
+    }
+
+    /**
+     * Create a thumb for an existing image.
+     *
+     * @param  string|bool|null  $thumbPath  custom thumb folder name, false uses thumb_dir
+     */
+    public function thumb(string $path, string $file, string|bool|null $thumbPath = false, int $thumbWidth = 0, int $thumbHeight = 0): bool
+    {
+        $source = $this->path($path, $file);
+
+        if (! $this->exists($source)) {
+            return false;
+        }
+
+        $width = $thumbWidth ?: (int) config('mediauploader.image_thumb_width');
+        $height = $thumbHeight ?: (int) config('mediauploader.image_thumb_height');
+        $folder = is_string($thumbPath) && $thumbPath !== '' ? $thumbPath : $this->thumbDir;
+        $ext = pathinfo($file, PATHINFO_EXTENSION);
+
+        $image = $this->images()->read($this->storage()->get($source));
+
+        if ($width && $height) {
+            // Fit inside the box without upscaling and fill the rest with transparency.
+            $image->pad($width, $height, 'transparent');
         } else {
+            $image->scaleDown($width ?: null, $height ?: null);
+        }
+
+        $encoded = $image->encodeByExtension($ext, quality: $this->quality($ext));
+
+        return $this->storage()->put($this->path($path, $folder, $file), (string) $encoded);
+    }
+
+    /**
+     * Delete a file and optionally its thumb.
+     */
+    public function delete(string $path, string $file, bool $thumb = false): bool
+    {
+        if ($file === '') {
+            return false;
+        }
+
+        if ($thumb) {
+            $this->storage()->delete($this->path($path, $this->thumbDir, $file));
+        }
+
+        $realPath = $this->path($path, $file);
+
+        if (! $this->exists($realPath)) {
+            return false;
+        }
+
+        return $this->storage()->delete($realPath);
+    }
+
+    /**
+     * Delete a directory. An empty path is refused so the base directory can't be wiped.
+     */
+    public function removeDirectory(string $path): bool
+    {
+        if (trim($path, '/ ') === '') {
+            return false;
+        }
+
+        $realPath = $this->path($path);
+
+        if (! $this->exists($realPath)) {
+            return false;
+        }
+
+        return $this->storage()->deleteDirectory($realPath);
+    }
+
+    public function fileExists(string $path, ?string $name): bool
+    {
+        return $name && $this->exists($this->path($path, $name));
+    }
+
+    public function showUrl(string $path, ?string $name): ?string
+    {
+        if (! $this->fileExists($path, $name)) {
             return null;
         }
+
+        return $this->getUrl($this->path($path, $name));
     }
 
     /**
-     * File link preview
-     *
-     * @param  string  $path
-     * @param  string  $name
-     * @param  string|null  $emptyText
-     * @return string|null
+     * Link to a file.
      */
-    public function showFile($path, $name, $emptyText = null)
+    public function showFile(string $path, ?string $name, ?string $emptyText = null): ?string
     {
-        $path = $this->basePath.$path;
-
-        if ($name && $this->exists($path.'/'.$name)) {
-            return '<a href="'.$this->getUrl($path.'/'.$name).'" target="_blank">'.$name.'</a>';
-        } else {
-            return $emptyText ?? null;
+        if (! $this->fileExists($path, $name)) {
+            return $emptyText;
         }
+
+        $url = $this->getUrl($this->path($path, $name));
+
+        return '<a href="'.e($url).'" target="_blank">'.e($name).'</a>';
     }
 
     /**
-     * File link preview from url
-     *
-     * @param  string  $url
-     * @param  string|null  $name
-     * @param  string|null  $emptyText
-     * @return string|null
+     * Link to a url.
      */
-    public function showFileFromUrl($url, $name = null, $emptyText = null)
+    public function showFileFromUrl(?string $url, ?string $name = null, ?string $emptyText = null): ?string
     {
-        if ($url) {
-            return '<a href="'.$url.'" target="_blank">'.($name ?? $url).'</a>';
-        } else {
-            return $emptyText ?? null;
+        if (! $url || ! $this->isSafeUrl($url)) {
+            return $emptyText;
         }
+
+        return '<a href="'.e($url).'" target="_blank">'.e($name ?? $url).'</a>';
     }
 
     /**
-     * Image preview
+     * Image tag for a stored image or a url.
      *
-     * @param  string|url  $path
-     * @param  string  $name
-     * @param  array|null  $array
-     * @return string|null
+     * Options: thumb, popup, fakeImg, id, class, style, alt
      */
-    public function showImg($pathOrUrl, $name, $array = null)
+    public function showImg(?string $pathOrUrl, ?string $name, ?array $array = null): ?string
     {
-        $thumb = isset($array['thumb']) ? $this->thumbDir.'/' : '';
-        $class = isset($array['class']) ? ' class="'.$array['class'].'"' : '';
-        $id = isset($array['id']) ? ' id="'.$array['id'].'"' : '';
-        $style = isset($array['style']) ? ' style="'.$array['style'].'"' : '';
-        $alt = isset($array['alt']) ? ' alt="'.$array['alt'].'"' : '';
-        $popup = isset($array['popup']) ? $array['popup'] : false;
-
+        $options = $array ?? [];
         $imgUrl = null;
         $imgSrc = null;
-        $fakeImgView = false;
-        if (filter_var($pathOrUrl, FILTER_VALIDATE_URL)) {
+
+        if ($pathOrUrl && filter_var($pathOrUrl, FILTER_VALIDATE_URL) && $this->isSafeUrl($pathOrUrl)) {
             $imgUrl = $imgSrc = $pathOrUrl;
-        } elseif ($name && $this->exists($this->basePath.$pathOrUrl.'/'.$name)) {
-            $path = $this->basePath.$pathOrUrl;
-            $imgUrl = $this->getUrl($path.'/'.$name);
-            if ($name && $this->exists($path.'/'.$thumb.$name)) {
-                $imgSrc = $this->getUrl($path.'/'.$thumb.$name);
-            } else {
-                $imgSrc = $imgUrl;
+        } elseif ($pathOrUrl !== null && $this->fileExists($pathOrUrl, $name)) {
+            $imgUrl = $imgSrc = $this->getUrl($this->path($pathOrUrl, $name));
+
+            $thumbPath = $this->path($pathOrUrl, $this->thumbDir, $name);
+            if (! empty($options['thumb']) && $this->exists($thumbPath)) {
+                $imgSrc = $this->getUrl($thumbPath);
             }
         } else {
-            $fakeImgView = true;
-            if (isset($array['fakeImg'])) {
-                if (is_string($array['fakeImg'])) {
-                    $imgSrc = $array['fakeImg'];
-                } elseif ($configFakeUrl = config('mediauploader.fake_image_url')) {
-                    if (filter_var($configFakeUrl, FILTER_VALIDATE_URL)) {
-                        $imgSrc = config('mediauploader.fake_image_url');
-                    } else {
-                        $imgSrc = url(config('mediauploader.fake_image_url'));
-                    }
+            $imgSrc = $this->fakeImage($options['fakeImg'] ?? null);
+        }
+
+        if (! $imgSrc) {
+            return null;
+        }
+
+        $img = '<img src="'.e($imgSrc).'"';
+        foreach (['alt', 'class', 'id', 'style'] as $attribute) {
+            if (isset($options[$attribute])) {
+                $img .= ' '.$attribute.'="'.e($options[$attribute]).'"';
+            }
+        }
+        $img .= '>';
+
+        // Popup only for real images, not for the fake one.
+        if (($options['popup'] ?? false) === true && $imgUrl) {
+            $caption = e($options['alt'] ?? '');
+
+            return '<a href="'.e($imgUrl).'" data-caption="'.$caption.'" data-fancybox="group">'.$img.'</a>';
+        }
+
+        return $img;
+    }
+
+    /**
+     * Resize, encode and store an image, then create the thumb.
+     */
+    protected function saveImage(ImageInterface $image, string $path, string $ext, ?string $originalName, ?string $name, bool $thumb, array $imageResize, array $thumbResize): array|false
+    {
+        $realPath = $this->path($path);
+        $fileName = $this->makeFileName($originalName, $ext, $name, $realPath);
+
+        if ($imageResize) {
+            $width = $imageResize[0] ?? null;
+            $height = $imageResize[1] ?? null;
+
+            $image->resize($width ?: null, $height ?: null);
+        }
+
+        $encoded = $image->encodeByExtension($ext, quality: $this->quality($ext));
+
+        if (! $this->storage()->put($realPath.'/'.$fileName, (string) $encoded)) {
+            return false;
+        }
+
+        if ($thumb) {
+            $this->thumb($path, $fileName, false, (int) ($thumbResize[0] ?? 0), (int) ($thumbResize[1] ?? 0));
+        }
+
+        return [
+            'name' => $fileName,
+            'originalName' => $originalName,
+            'size' => $encoded->size(),
+            'width' => $image->width(),
+            'height' => $image->height(),
+            'mime_type' => $encoded->mimetype(),
+            'ext' => $ext,
+            'url' => $this->getUrl($realPath.'/'.$fileName),
+        ];
+    }
+
+    /**
+     * Make a unique, slugged file name. Adds -1, -2, ... when the name is taken.
+     */
+    protected function makeFileName(?string $originalName, string $ext, ?string $name, string $realPath): string
+    {
+        if (config('mediauploader.random_name')) {
+            $baseName = Str::lower(Str::random(32));
+        } else {
+            $baseName = Str::slug($name ?: pathinfo((string) $originalName, PATHINFO_FILENAME)) ?: uniqid();
+
+            if (config('mediauploader.timestamp_prefix')) {
+                $baseName .= '-'.time();
+            }
+        }
+
+        $ext = $ext ? '.'.$ext : '';
+        $fileName = $baseName.$ext;
+        $counter = 1;
+
+        while ($this->exists($realPath.'/'.$fileName)) {
+            $fileName = $baseName.'-'.$counter++.$ext;
+        }
+
+        return $fileName;
+    }
+
+    protected function getUrl(string $path): string
+    {
+        $path = ltrim($path, '/');
+
+        // Private local disk has no public url, serve through the package route.
+        if ($this->usesPreviewRoute()) {
+            return route('mediauploader.preview', ['path' => $path]);
+        }
+
+        $minutes = (int) config('mediauploader.temporary_url_minutes');
+        if ($minutes && $this->storage()->providesTemporaryUrls()) {
+            return $this->storage()->temporaryUrl($path, now()->addMinutes($minutes));
+        }
+
+        return $this->storage()->url($path);
+    }
+
+    protected function usesPreviewRoute(): bool
+    {
+        $disk = config('filesystems.disks.'.$this->diskName, []);
+
+        return config('mediauploader.route.enabled', true)
+            && $this->diskName === config('mediauploader.route.disk', 'local')
+            && ($disk['driver'] ?? null) === 'local'
+            && empty($disk['url']);
+    }
+
+    /**
+     * Build a path inside base_dir. Throws on "." or ".." segments.
+     */
+    protected function path(?string ...$segments): string
+    {
+        $parts = [];
+
+        foreach ([$this->basePath, ...$segments] as $segment) {
+            foreach (explode('/', str_replace('\\', '/', (string) $segment)) as $part) {
+                if ($part === '.' || $part === '..') {
+                    throw new InvalidArgumentException('Invalid path: '.implode('/', $segments));
+                }
+
+                if ($part !== '') {
+                    $parts[] = $part;
                 }
             }
         }
 
-        if ($imgSrc) {
-            $img = '<img src="'.$imgSrc.'"'.$alt.$class.$id.$style.'>';
-            if ($popup === true && $fakeImgView === false) {
-                return '<a href="'.$imgUrl.'" data-caption="'.$alt.'" data-fancybox="group" data-lyte-options="group:vacation">'.$img.'</a>';
-            }
+        return implode('/', $parts);
+    }
 
-            return $img;
-        } else {
+    /**
+     * Get an image extension Intervention can encode, from the given extension or mime type.
+     */
+    protected function imageExtension(?string $ext, ?string $mimeType): string
+    {
+        $extension = FileExtension::tryCreate(strtolower((string) $ext))
+            ?? FileExtension::tryCreate(strtolower((string) $mimeType));
+
+        if (! $extension) {
+            throw new InvalidArgumentException('Unsupported image type: '.($mimeType ?: $ext));
+        }
+
+        return $extension->value;
+    }
+
+    protected function quality(string $ext): int
+    {
+        if (strtolower($ext) === 'webp') {
+            return (int) config('mediauploader.webp_quality', 70);
+        }
+
+        return (int) config('mediauploader.image_quality', 90);
+    }
+
+    protected function mimeType(string $content): ?string
+    {
+        return (new \finfo(FILEINFO_MIME_TYPE))->buffer($content) ?: null;
+    }
+
+    /**
+     * Download a remote file. Every url (including redirects) is checked with checkRemoteUrl().
+     */
+    protected function download(string $url): ?string
+    {
+        $this->checkRemoteUrl($url);
+
+        $maxSize = (int) config('mediauploader.remote.max_size', 10 * 1024 * 1024);
+
+        $response = Http::timeout((int) config('mediauploader.remote.timeout', 15))
+            ->withOptions([
+                'allow_redirects' => [
+                    'max' => 5,
+                    'on_redirect' => fn ($request, $response, $uri) => $this->checkRemoteUrl((string) $uri),
+                ],
+            ])
+            ->get($url);
+
+        if (! $response->successful()) {
             return null;
         }
+
+        if (strlen($response->body()) > $maxSize) {
+            throw new InvalidArgumentException('Remote file is larger than '.$maxSize.' bytes.');
+        }
+
+        return $response->body();
     }
 
     /**
-     * Make File Name
-     *
-     * @param  string  $originalName
-     * @param  string  $ext
-     * @param  string|null  $name
-     * @param  string  $realPath
-     * @return string
+     * Only allow http(s) urls that don't point to a private or reserved ip.
      */
-    private function makeFileName($originalName, $ext, $name, $realPath)
+    protected function checkRemoteUrl(string $url): void
     {
-        $timestamp = config('mediauploader.timestamp_prefix') == true ? '-'.time() : null;
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $host = trim((string) parse_url($url, PHP_URL_HOST), '[]');
 
-        if ($name) {
-            $fileName = Str::slug($name, '-').$timestamp;
-        } elseif ($originalName) {
-            $newName = str_replace('.'.$ext, '', $originalName);
-            $fileName = Str::slug($newName, '-').$timestamp;
-        } else {
-            $fileName = uniqid();
+        if (! in_array($scheme, ['http', 'https']) || $host === '') {
+            throw new InvalidArgumentException('Only http and https urls are allowed.');
         }
 
-        if ($this->exists($realPath.'/'.$fileName)) {
-            $fileName = $fileName.'-'.rand(1, 10);
+        if (config('mediauploader.remote.allow_private_hosts')) {
+            return;
         }
 
-        return $fileName.'.'.$ext;
+        $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : gethostbynamel($host);
+
+        if (! $ips) {
+            throw new InvalidArgumentException('Unable to resolve host: '.$host);
+        }
+
+        foreach ($ips as $ip) {
+            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                throw new InvalidArgumentException('Private or reserved address is not allowed: '.$host);
+            }
+        }
     }
 
     /**
-     * get the image or file url
-     *
-     * @return string
+     * Allow http, https and relative urls in links (blocks javascript: etc).
      */
-    private function getUrl($path)
+    protected function isSafeUrl(string $url): bool
     {
-        if ($this->diskName == 'local') {
-            return route('mediauploader.preview', [$path]);
-        }
+        $scheme = parse_url($url, PHP_URL_SCHEME);
 
-        return Storage::disk($this->diskName)->url($path);
+        return $scheme === null || in_array(strtolower($scheme), ['http', 'https']);
     }
 
-    /**
-     * return true or false based on file exist or not
-     *
-     * @return bool
-     */
-    private function exists($path)
+    protected function fakeImage(mixed $fakeImg): ?string
     {
-        return Storage::disk($this->diskName)->exists($path);
+        if (is_string($fakeImg) && $fakeImg !== '') {
+            return $this->isSafeUrl($fakeImg) ? $fakeImg : null;
+        }
+
+        $configUrl = config('mediauploader.fake_image_url');
+
+        if (! $fakeImg || ! $configUrl) {
+            return null;
+        }
+
+        return filter_var($configUrl, FILTER_VALIDATE_URL) ? $configUrl : url($configUrl);
+    }
+
+    protected function images(): ImageManager
+    {
+        $driver = config('mediauploader.image_driver') === 'imagick' ? new ImagickDriver : new GdDriver;
+
+        return new ImageManager($driver);
+    }
+
+    protected function storage(): FilesystemAdapter
+    {
+        return Storage::disk($this->diskName);
+    }
+
+    protected function exists(string $path): bool
+    {
+        return $this->storage()->exists($path);
     }
 }

@@ -7,29 +7,20 @@ use Sudip\MediaUploader\MediaUploader;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     *
-     * @return void
-     */
-    public function register()
+    public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../../config/mediauploader.php', 'mediauploader');
 
-        $this->app->bind('mediauploader', function () {
-            return new MediaUploader;
-        });
+        $this->app->bind(MediaUploader::class, fn () => new MediaUploader);
+        $this->app->alias(MediaUploader::class, 'mediauploader');
     }
 
-    /**
-     * Bootstrap services.
-     *
-     * @return void
-     */
-    public function boot()
+    public function boot(): void
     {
-        $this->publishes([
-            __DIR__.'/../../config/mediauploader.php' => config_path('mediauploader.php'),
-        ], 'config');
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__.'/../../config/mediauploader.php' => config_path('mediauploader.php'),
+            ], ['mediauploader-config', 'config']);
+        }
     }
 }

@@ -3,13 +3,28 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
-Route::get('/mediauploader/{path}/{path2?}/{path3?}/{path4?}', function ($path, $path2 = null, $path3 = null, $path4 = null) {
-    $path = implode('/', array_filter([$path, $path2, $path3, $path4]));
-    $filePath = Storage::disk('local')->path($path);
+Route::get(config('mediauploader.route.prefix', 'mediauploader').'/{path}', function (string $path) {
+    $baseDir = trim((string) config('mediauploader.base_dir'), '/');
+    $segments = explode('/', $path);
 
-    if (! file_exists($filePath)) {
+    if (in_array('..', $segments) || in_array('.', $segments)) {
         abort(404);
     }
 
-    return response()->file($filePath);
-})->name('mediauploader.preview');
+    // Only serve files inside base_dir.
+    if ($baseDir && ! str_starts_with($path, $baseDir.'/')) {
+        abort(404);
+    }
+
+    $disk = Storage::disk(config('mediauploader.route.disk', 'local'));
+    $filePath = $disk->path($path);
+
+    if (! is_file($filePath)) {
+        abort(404);
+    }
+
+    return response()->file($filePath, ['X-Content-Type-Options' => 'nosniff']);
+})
+    ->where('path', '.*')
+    ->middleware(config('mediauploader.route.middleware', []))
+    ->name('mediauploader.preview');
