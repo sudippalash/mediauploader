@@ -11,10 +11,10 @@ It also includes file and image preview functionality.
 
 | mediauploader | PHP | Laravel | Intervention Image |
 |---|---|---|---|
-| 2.x | 8.2+ | 10, 11, 12, 13 | 3.x |
-| 1.x | 7.3+ | 7 – 13 | 2.x |
+| 3.x | 8.2+ | 10, 11, 12, 13 | 3.x |
+| 1.x, 2.x | 7.3+ | 7 – 13 | 2.x |
 
-Upgrading from 1.x? See [CHANGELOG.md](CHANGELOG.md#upgrading-from-1x).
+Upgrading from 2.x? See [CHANGELOG.md](CHANGELOG.md#upgrading-from-2x).
 
 ## Install
 
