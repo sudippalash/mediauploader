@@ -2,16 +2,14 @@
 
 namespace Sudip\MediaUploader\Providers;
 
-use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 
 class RouteServiceProvider extends ServiceProvider
 {
-    public function register() {}
-
-    public function boot()
+    public function boot(): void
     {
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-        $router = $this->app->make(Router::class);
+        if (config('mediauploader.route.enabled', false)) {
+            $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        }
     }
 }

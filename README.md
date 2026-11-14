@@ -7,6 +7,15 @@
 
 It also includes file and image preview functionality.
 
+## Requirements
+
+| mediauploader | PHP | Laravel | Intervention Image |
+|---|---|---|---|
+| 2.x | 8.2+ | 10, 11, 12, 13 | 3.x |
+| 1.x | 7.3+ | 7 – 13 | 2.x |
+
+Upgrading from 1.x? See [CHANGELOG.md](CHANGELOG.md#upgrading-from-1x).
+
 ## Install
 
 Via Composer
@@ -20,89 +29,33 @@ composer require sudippalash/mediauploader
 You should publish the config file with:
 
 ```
-php artisan vendor:publish --provider="Sudip\MediaUploader\Providers\AppServiceProvider" --tag=config
+php artisan vendor:publish --tag=mediauploader-config
 ```
 
-In `config/mediauploader.php` config file you should set `mediauploader` global path.
+In `config/mediauploader.php` you can set:
 
-```php
-return [
-    /*
-    |--------------------------------------------------------------------------
-    | Base Directory
-    |--------------------------------------------------------------------------
-    |
-    | base_dir stores all other directory inside storage folder of your laravel application by default
-    | if you specify any name. all storage will be done inside that directory or name that you specified
-    |
-    */
+| Key | Default | Description |
+|---|---|---|
+| `disk` | `null` | Disk to store files on. `null` uses `filesystems.default`. Env: `MEDIAUPLOADER_DISK`. |
+| `base_dir` | `null` | Every path is stored inside this folder, e.g. `uploads` → `uploads/images/photo.jpg`. |
+| `thumb_dir` | `thumb` | Sub folder name for thumbs. |
+| `timestamp_prefix` | `false` | Append `-<timestamp>` to generated names. |
+| `random_name` | `false` | Use a random 32 character name instead of the original name. |
+| `image_driver` | `gd` | `gd` or `imagick`. |
+| `image_quality` / `webp_quality` | `90` / `70` | Encoding quality for lossy formats. |
+| `image_thumb_width` / `image_thumb_height` | `300` / `300` | Default thumb size. Set one to `null` to scale by the other only. |
+| `fake_image_url` | `null` | Placeholder used by `showImg()` with `'fakeImg' => true`. |
+| `temporary_url_minutes` | `null` | Return signed temporary urls on disks that support them (e.g. private S3). |
+| `remote.timeout` / `remote.max_size` | `15` / `10 MB` | Limits for `imageUploadFromUrl()`. |
+| `remote.allow_private_hosts` | `false` | Allow `imageUploadFromUrl()` to fetch from private / internal IPs. |
+| `route.enabled` / `route.prefix` / `route.disk` / `route.middleware` | `false` / `mediauploader` / `local` / `[]` | Preview route for files on a private local disk. Off by default. |
 
-    'base_dir' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Thumb Directory
-    |--------------------------------------------------------------------------
-    |
-    | thumb_dir creates another folder inside the directory as a "thumb" by default
-    | you can change the name thumb to any other name you like.
-    */
-
-    'thumb_dir' => 'thumb',
-
-    /*
-    |--------------------------------------------------------------------------
-    | Timestamp Prefix
-    |--------------------------------------------------------------------------
-    |
-    | If timestamp_prefix is true then create a file with a timestamp to ignore the same name image replacement. Example: image-1658562981.png.
-    | If timestamp_prefix is false then the script checks file exists or not if the file exists then add the time() prefix for the new file otherwise leave it as the file
-    | name.
-    */
-
-    'timestamp_prefix' => false,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Thumb Image Height Width
-    |--------------------------------------------------------------------------
-    |
-    | specify the thumb image ratio of height and weight by default it takes 300px X 300px
-    */
-
-    'image_thumb_height' => 300,
-    'image_thumb_width' => 300,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Fake Image Url
-    |--------------------------------------------------------------------------
-    |
-    | fake_image_url , if you specify a fake image path or url here. the entire package will use
-    | this image when there is no image found. or you can specify the fake image in the
-    | function parameter as well.
-    | Example: 'fake_image_url' => 'images/fake.png' or 'fake_image_url' => 'https://example.com/images/fake.png,
-    */
-
-    'fake_image_url' => null,
-
-    /*
-    |--------------------------------------------------------------------------
-    | Folder permission
-    |--------------------------------------------------------------------------
-    |
-    | path_permission , if you create a folder in your project then you can define your folder permission.
-    | Example: null, 0755, 0777
-    */
-
-    'path_permission' => 0777,
-];
-```
+When a file with the same name already exists, `-1`, `-2`, ... is appended, so existing files are never overwritten.
 
 ## Configuration 
 Before using this, you must complete the following steps (if you want to use the default filesystem disk, which is public):
 
-1. Change your env filesystem drive to this if you want to use public storage directory.
+1. Change your env filesystem drive to this if you want to use public storage directory (or set `MEDIAUPLOADER_DISK=public` to change it only for this package).
 ```
 FILESYSTEM_DISK=public
 ```
@@ -111,12 +64,19 @@ FILESYSTEM_DISK=public
 php artisan storage:link
 ```
 
-3. You can also specify the filesystem disk when using image or file functions (see the usage section for details).
-```bash
-MediaUploader::disk('local')->usageFunction();
+3. You can also specify the filesystem disk for a single call. It does not change the disk used by later calls.
+```php
+MediaUploader::disk('s3')->imageUpload($request->file('image'), 'images');
 ```
 
+4. Files on the private `local` disk have no public url. To serve them, turn on the preview route (`'route' => ['enabled' => true]`), which adds `GET /mediauploader/{path}`. It only serves files inside `base_dir`. **Set a `base_dir` and add middleware** (for example `['web', 'auth']`) in `route.middleware`: without them, anyone could read that disk.
+
 ## Usage (File Upload)
+
+Invalid input (unsupported image type, invalid base64, `..` in a path, a disallowed url) throws an `InvalidArgumentException`.
+
+`$imageResize` is `[maxWidth, maxHeight]`: the image is scaled down to fit inside that box, keeping its proportions, and is never enlarged. Pass one value (`[600]`) to limit only the width.
+
 1. Image Upload
 
 ```php
@@ -164,7 +124,7 @@ if ($file) {
 }
 ```
 
-4. Image Upload from URL
+4. Image Upload from URL (only `http`/`https`; private and internal addresses are refused by default)
 
 ```php
 MediaUploader::imageUploadFromUrl(<Valid Image URL>, <output path>, thumb=false, name=null, $imageResize = [], $thumbResize = [0, 0]);
@@ -180,7 +140,7 @@ if ($file) {
 }
 ```
 
-5. Base64 image Upload
+5. Base64 image Upload (a data URI like `data:image/png;base64,...` or raw base64)
 
 ```php
 MediaUploader::base64ImageUpload(<base64 Content>, <output path>, thumb=false, name=null, $imageResize = [], $thumbResize = [0, 0]);
@@ -200,7 +160,7 @@ if ($file) {
 6. Content Upload
 
 ```php
-MediaUploader::contentUpload(<Content>, <output path>, name=null);
+MediaUploader::contentUpload(<Content>, <output path>, name=null, extension='jpg');
 ```
 
 Example:
@@ -216,13 +176,15 @@ if ($file) {
 7. Thumb (to create a thumb from an existing image, you can use this)
 
 ```php
-MediaUploader::thumb(<output path>, <file>, $thumbPath = false, $thumbWidth = 0, $thumbHeight = 0);
+MediaUploader::thumb(<path>, <file>, $thumbFolder = false, $thumbWidth = 0, $thumbHeight = 0);
 ```
+
+`$thumbFolder` is a custom folder name; `false` uses `thumb_dir`. Returns `true` or `false`.
 
 Example:
 
 ```php
-$file = MediaUploader::thumb('thumbs', $file, 200, 200);
+$file = MediaUploader::thumb('images', 'photo.jpg', false, 200, 200);
 
 if ($file) {
     // File is saved successfully
@@ -232,7 +194,7 @@ if ($file) {
 
 Returns:
 
-Response from every function looks like this
+Every upload function returns this array (or `false` when the disk could not write the file)
 ```php
 [
     "name" => "example-image.jpg"
@@ -337,7 +299,7 @@ Example:
 {!! MediaUploader::showFileFromUrl($file_url, $file_name, $empty_text) !!}
 ```
 
-4. Image Preview
+4. Image Preview (all attributes are HTML-escaped)
 
 ```php
 MediaUploader::showImg(<path_or_url>, <file_name>, <array options>)
@@ -355,6 +317,14 @@ Example:
     'style' => '',
     'alt' => 'Nice Image',
 ]) !!}
+```
+
+## Testing
+
+```bash
+composer test
+composer analyse
+composer lint
 ```
 
 [ico-version]: https://img.shields.io/packagist/v/sudippalash/mediauploader?style=flat-square
