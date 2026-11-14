@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 - Unreleased
+## 3.0.0 - 2026-11-14
 
 ### Breaking
 
@@ -15,7 +15,7 @@
 - The preview route now only serves files inside `base_dir`, and accepts any path depth.
 - `showImg()` with `'fakeImg' => false` no longer falls back to `fake_image_url`; pass `true`.
 - The preview route is **off by default** (`route.enabled` is `false`). Turn it on in the config if you serve files from a private `local` disk.
-- `$imageResize` keeps the image's proportions and never enlarges it: the image is scaled to fit inside the given width and height. In 1.x the main image was stretched to exactly that size (only thumbs kept their proportions). Pass a box with the image's own proportions to get the old exact size.
+- `$imageResize` keeps the image's proportions and never enlarges it: the image is scaled to fit inside the given width and height. In 2.x the main image was stretched to exactly that size (only thumbs kept their proportions). Pass a box with the image's own proportions to get the old exact size.
 
 ### Fixed
 
@@ -43,10 +43,10 @@
 - Config can be published with `--tag=mediauploader-config`.
 - Test suite (Orchestra Testbench), PHPStan (Larastan), Pint, and GitHub Actions CI across PHP 8.2–8.4 and Laravel 10–13.
 
-### Upgrading from 1.x
+### Upgrading from 2.x
 
-1. `composer require sudippalash/mediauploader:^2.0` (this also upgrades `intervention/image` to 3.x; if your app uses Intervention directly, see its [upgrade guide](https://image.intervention.io/v3/introduction/upgrade)).
+1. `composer require sudippalash/mediauploader:^3.0` (this also upgrades `intervention/image` to 3.x; if your app uses Intervention directly, see its [upgrade guide](https://image.intervention.io/v3/introduction/upgrade)).
 2. If you published the config, compare it with the new `config/mediauploader.php` and add the new keys. Remove `path_permission`.
-3. If you set `base_dir` with a trailing slash (`'uploads/'`), nothing changes. If you set it without one (`'uploads'`), 1.x stored files in `uploadsimages/...`; move those files, or keep the old layout by setting `base_dir` to `null` and prefixing your paths yourself.
+3. If you set `base_dir` with a trailing slash (`'uploads/'`), nothing changes. If you set it without one (`'uploads'`), 2.x stored files in `uploadsimages/...`; move those files, or keep the old layout by setting `base_dir` to `null` and prefixing your paths yourself.
 4. If you serve private files through `/mediauploader/...`, set `base_dir` and consider `route.middleware`.
 5. If you compared `$result['ext']` from `webpUpload()` with `'.webp'`, compare with `'webp'`.
