@@ -48,7 +48,7 @@ In `config/mediauploader.php` you can set:
 | `temporary_url_minutes` | `null` | Return signed temporary urls on disks that support them (e.g. private S3). |
 | `remote.timeout` / `remote.max_size` | `15` / `10 MB` | Limits for `imageUploadFromUrl()`. |
 | `remote.allow_private_hosts` | `false` | Allow `imageUploadFromUrl()` to fetch from private / internal IPs. |
-| `route.enabled` / `route.prefix` / `route.disk` / `route.middleware` | `true` / `mediauploader` / `local` / `[]` | Preview route for files on a private local disk. |
+| `route.enabled` / `route.prefix` / `route.disk` / `route.middleware` | `false` / `mediauploader` / `local` / `[]` | Preview route for files on a private local disk. Off by default. |
 
 When a file with the same name already exists, `-1`, `-2`, ... is appended, so existing files are never overwritten.
 
@@ -69,11 +69,13 @@ php artisan storage:link
 MediaUploader::disk('s3')->imageUpload($request->file('image'), 'images');
 ```
 
-4. Files on the private `local` disk have no public url, so they are served through `GET /mediauploader/{path}`. The route only serves files inside `base_dir`. **Set a `base_dir` and add middleware** (for example `['web', 'auth']`) in `route.middleware` if those files must not be public, or turn the route off with `'route' => ['enabled' => false]`.
+4. Files on the private `local` disk have no public url. To serve them, turn on the preview route (`'route' => ['enabled' => true]`), which adds `GET /mediauploader/{path}`. It only serves files inside `base_dir`. **Set a `base_dir` and add middleware** (for example `['web', 'auth']`) in `route.middleware`: without them, anyone could read that disk.
 
 ## Usage (File Upload)
 
 Invalid input (unsupported image type, invalid base64, `..` in a path, a disallowed url) throws an `InvalidArgumentException`.
+
+`$imageResize` is `[maxWidth, maxHeight]`: the image is scaled down to fit inside that box, keeping its proportions, and is never enlarged. Pass one value (`[600]`) to limit only the width.
 
 1. Image Upload
 

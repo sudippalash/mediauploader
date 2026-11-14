@@ -2,7 +2,9 @@
 
 namespace Sudip\MediaUploader\Tests;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Sudip\MediaUploader\Facades\MediaUploader;
 
 class PreviewRouteTest extends TestCase
 {
@@ -11,6 +13,7 @@ class PreviewRouteTest extends TestCase
         parent::defineEnvironment($app);
 
         $app['config']->set('mediauploader.base_dir', 'uploads');
+        $app['config']->set('mediauploader.route.enabled', true);
     }
 
     protected function setUp(): void
@@ -25,6 +28,13 @@ class PreviewRouteTest extends TestCase
     public function test_serves_files_inside_base_dir(): void
     {
         $this->get('/mediauploader/uploads/files/a.txt')->assertOk();
+    }
+
+    public function test_local_disk_urls_use_the_preview_route(): void
+    {
+        $result = MediaUploader::disk('local')->anyUpload(UploadedFile::fake()->create('b.txt', 1), 'files');
+
+        $this->assertSame(url('mediauploader/uploads/files/b.txt'), $result['url']);
     }
 
     public function test_refuses_files_outside_base_dir(): void

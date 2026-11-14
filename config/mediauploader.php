@@ -42,8 +42,9 @@ return [
     ],
 
     // Route that serves files from the private local disk: /mediauploader/{path}
+    // Off by default: when on, set base_dir and add auth middleware, or anyone can read that disk.
     'route' => [
-        'enabled' => true,
+        'enabled' => false,
         'prefix' => 'mediauploader',
         'disk' => 'local',
         'middleware' => [], // Example: ['web', 'auth']

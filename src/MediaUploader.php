@@ -324,11 +324,12 @@ class MediaUploader
         $realPath = $this->path($path);
         $fileName = $this->makeFileName($originalName, $ext, $name, $realPath);
 
+        // scaleDown keeps the proportions and never enlarges; resize() would stretch the image.
         if ($imageResize) {
             $width = $imageResize[0] ?? null;
             $height = $imageResize[1] ?? null;
 
-            $image->resize($width ?: null, $height ?: null);
+            $image->scaleDown($width ?: null, $height ?: null);
         }
 
         $encoded = $image->encodeByExtension($ext, quality: $this->quality($ext));
@@ -400,7 +401,7 @@ class MediaUploader
     {
         $disk = config('filesystems.disks.'.$this->diskName, []);
 
-        return config('mediauploader.route.enabled', true)
+        return config('mediauploader.route.enabled', false)
             && $this->diskName === config('mediauploader.route.disk', 'local')
             && ($disk['driver'] ?? null) === 'local'
             && empty($disk['url']);

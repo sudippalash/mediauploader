@@ -4,6 +4,7 @@ namespace Sudip\MediaUploader\Tests;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use InvalidArgumentException;
 use Sudip\MediaUploader\Facades\MediaUploader;
@@ -60,6 +61,17 @@ class MediaUploaderTest extends TestCase
 
         $thumb = getimagesizefromstring(Storage::disk('public')->get('images/thumb/photo.jpg'));
         $this->assertSame([100, 100], [$thumb[0], $thumb[1]]);
+    }
+
+    public function test_image_resize_keeps_proportions_and_never_enlarges(): void
+    {
+        $intoSquare = MediaUploader::imageUpload(UploadedFile::fake()->image('wide.jpg', 1200, 800), 'images', false, null, [600, 600]);
+        $widthOnly = MediaUploader::imageUpload(UploadedFile::fake()->image('wide.jpg', 1200, 800), 'images', false, null, [300]);
+        $small = MediaUploader::imageUpload(UploadedFile::fake()->image('small.jpg', 200, 100), 'images', false, null, [600, 600]);
+
+        $this->assertSame([600, 400], [$intoSquare['width'], $intoSquare['height']]);
+        $this->assertSame([300, 200], [$widthOnly['width'], $widthOnly['height']]);
+        $this->assertSame([200, 100], [$small['width'], $small['height']]);
     }
 
     public function test_webp_upload_converts_and_uses_plain_extension(): void
@@ -156,11 +168,12 @@ class MediaUploaderTest extends TestCase
         Storage::disk('local')->assertMissing('files/b.txt');
     }
 
-    public function test_local_disk_urls_use_preview_route(): void
+    public function test_preview_route_is_off_by_default(): void
     {
         $result = MediaUploader::disk('local')->anyUpload(UploadedFile::fake()->create('a.txt', 1), 'files');
 
-        $this->assertSame(url('mediauploader/files/a.txt'), $result['url']);
+        $this->assertFalse(Route::has('mediauploader.preview'));
+        $this->assertNotSame(url('mediauploader/files/a.txt'), $result['url']);
     }
 
     public function test_show_file_escapes_output(): void

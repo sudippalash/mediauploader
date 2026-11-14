@@ -14,6 +14,8 @@
 - `path_permission` config was removed. Laravel ignored it on all supported versions; set directory permissions in `config/filesystems.php` (`'permissions'` on the disk) instead.
 - The preview route now only serves files inside `base_dir`, and accepts any path depth.
 - `showImg()` with `'fakeImg' => false` no longer falls back to `fake_image_url`; pass `true`.
+- The preview route is **off by default** (`route.enabled` is `false`). Turn it on in the config if you serve files from a private `local` disk.
+- `$imageResize` keeps the image's proportions and never enlarges it: the image is scaled to fit inside the given width and height. In 1.x the main image was stretched to exactly that size (only thumbs kept their proportions). Pass a box with the image's own proportions to get the old exact size.
 
 ### Fixed
 
@@ -32,7 +34,7 @@
 - `imageUploadFromUrl()` only fetches `http`/`https`, refuses private / reserved IP ranges (including on redirects), and enforces a timeout and size limit (`remote.*` config).
 - `showImg()`, `showFile()` and `showFileFromUrl()` escape all output; `javascript:` and other non-http urls are refused.
 - Paths containing `.` or `..` segments are rejected.
-- The preview route can be disabled or put behind middleware (`route.*` config) and sends `X-Content-Type-Options: nosniff`.
+- The preview route is off by default, can be put behind middleware (`route.*` config) and sends `X-Content-Type-Options: nosniff`. With it on and no `base_dir`, it would serve the whole private disk (for example database backups), so it is opt-in.
 
 ### Added
 
